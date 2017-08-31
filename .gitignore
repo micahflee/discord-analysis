@@ -46,5 +46,5 @@ tags
 # OSX
 .DS_Store
 
-# JSON files during development
-*.json
+# Don't track config file
+config.json

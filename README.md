@@ -4,6 +4,8 @@ A tool to search Discord JSON files for keywords, and showing you specific messa
 
 ## Getting started
 
+Copy `config-example.json` to `config.json`, and then edit it.
+
 Install dependencies:
 
 ```sh
