@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+  <p>Discord JSON files loaded:</p>
+  <ul>
+    {% for file in files %}
+    <li><strong>{{file.filename}}</strong> {{file.size}}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

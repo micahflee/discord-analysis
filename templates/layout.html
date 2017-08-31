@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Discord Analysis</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <h1>
+          Discord Analysis
+        </h1>
+        <div class="search">
+          <form method="get" target="/search">
+            <select>
+              <option value="__all__">[ All ]</option>
+            </select>
+            <input type="text" name="q" class="q" placeholder="Search query" />
+            <input type="submit" value="Search" />
+          </form>
+        </div>
+      </div>
+      <div class="content">
+        {% for message in get_flashed_messages() %}
+          <div class=flash>{{ message }}</div>
+        {% endfor %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </body>
+</html>
