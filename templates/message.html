@@ -10,6 +10,8 @@
   </p>
   <p class="message">{{ message.safe_message|safe }}</p>
   {% if message.attachments %}
-    <p class="attachments">{{ message.attachments }}</p>
+    {% for a in message.attachments %}
+      <p class="attachments"><img src="{{ a.url }}" /></p>
+    {% endfor %}
   {% endif %}
 </li>

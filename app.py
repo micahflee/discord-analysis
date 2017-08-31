@@ -106,7 +106,7 @@ def create_message_obj(m, basename, channel_name, server_name, json_data, q=None
 
     # Attachments
     if 'a' in m:
-        attachments = str(m['a'])
+        attachments = m['a']
     else:
         attachments = None
 
