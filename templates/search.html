@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+
+{% for result in results %}
+  <div class="results">
+    <div class="results-header">Results for: {{result.basename}}</div>
+    <ul>
+      {% for message in result.messages %}
+        <li>
+          <p>
+            <span class="user-name">{{message.user_name}}</span>
+            <span class="channel-name">#{{message.channel_name}}</span>
+            <span class="server-name">[server: {{message.server_name}}]</span>
+            <span class="permalink"><a href="/{{message.basename}}/{{message.timestamp}}">view</a></span>
+          </p>
+          <p>
+            <span class="timestamp">{{message.datetime}}</span>
+          </p>
+          <p class="message">{{ message.safe_message|safe }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endfor %}
+
+{% endblock %}

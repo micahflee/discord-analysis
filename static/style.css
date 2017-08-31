@@ -33,3 +33,59 @@ body {
   width: 100px;
   color: #666666;
 }
+
+.content .results {
+  border: 1px solid #999999;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.content .results .results-header {
+  color: #666666;
+  font-weight: bold;
+}
+
+.content .results ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.content .results ul li {
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.content .results ul p {
+  margin: 0;
+  padding: 0;
+}
+
+.content .results .channel-name {
+  color: #560b4d;
+  margin-right: 10px;
+}
+
+.content .results .server-name {
+  color: #999999;
+  font-size: 0.8em;
+}
+
+.content .results .user-name {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.content .results .timestamp {
+  color: #999999;
+  font-size: 0.8em;
+}
+
+.content .results .message {
+  margin-top: 10px;
+}
+
+.content .results .message .highlight {
+  background-color: #ff8ef1;
+}
