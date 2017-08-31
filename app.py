@@ -34,30 +34,11 @@ def search():
 
             for message_id in json_data['data'][channel_id]:
                 m = json_data['data'][channel_id][message_id]
-
-                # Pull the user data, timestamp, and message body from the message
-                user_index = m['u']
-                user_id = json_data['meta']['userindex'][user_index]
-                user_name = json_data['meta']['users'][user_id]['name']
-                formatted_ts = ts_fmt(m['t'])
-                message = m['m']
-                if 'a' in m:
-                    attachments = str(m['a'])
-                else:
-                    attachments = None
+                message_obj = create_message_obj(m, basename, channel_name, server_name, json_data, q)
 
                 # Is the query in the message?
-                if q.lower() in message.lower():
-                    messages.append({
-                        'basename': basename,
-                        'channel_name': channel_name,
-                        'server_name': server_name,
-                        'user_name': user_name,
-                        'ts': json_data['data'][channel_id][message_id]['t'],
-                        'formatted_ts': formatted_ts,
-                        'safe_message': highlight(message, q),
-                        'attachments': attachments
-                    })
+                if q.lower() in message_obj['orig_message'].lower():
+                    messages.append(message_obj)
 
         if len(messages) > 0:
             results.append({
@@ -102,27 +83,11 @@ def view(basename, channel_name, ts):
 
     messages = []
     for message_id in channel_data:
-        message_ts = channel_data[message_id]['t']
-        if range_from < message_ts < range_to:
-            m = channel_data[message_id]
-            user_id = json_data['meta']['userindex'][m['u']]
-            user_name = json_data['meta']['users'][user_id]['name']
-            formatted_ts = ts_fmt(json_data['data'][channel_id][message_id]['t'])
-            if 'a' in m:
-                attachments = str(m['a'])
-            else:
-                attachments = None
+        m = channel_data[message_id]
+        message_obj = create_message_obj(m, basename, channel_name, server_name, json_data, q)
 
-            messages.append({
-                'basename': basename,
-                'channel_name': channel_name,
-                'server_name': server_name,
-                'user_name': user_name,
-                'ts': m['t'],
-                'formatted_ts': formatted_ts,
-                'safe_message': highlight(m['m'], q),
-                'attachments': attachments
-            })
+        if range_from < message_obj['ts'] < range_to:
+            messages.append(message_obj)
 
     # Now sort messages by timestamp
     messages.sort(key=lambda x: x['ts'])
@@ -131,6 +96,30 @@ def view(basename, channel_name, ts):
     description = 'Messages in #{} from {} to {}'.format(channel_name, ts_fmt(range_from), ts_fmt(range_to))
 
     return render_template('view.html', messages=messages, q=q, description=description)
+
+def create_message_obj(m, basename, channel_name, server_name, json_data, q=None):
+    # Pull the user data, timestamp, and message body from the message
+    user_index = m['u']
+    user_id = json_data['meta']['userindex'][user_index]
+    user_name = json_data['meta']['users'][user_id]['name']
+
+    # Attachments
+    if 'a' in m:
+        attachments = str(m['a'])
+    else:
+        attachments = None
+
+    return {
+        'basename': basename,
+        'channel_name': channel_name,
+        'server_name': server_name,
+        'user_name': user_name,
+        'ts': m['t'],
+        'formatted_ts': ts_fmt(m['t']),
+        'orig_message': m['m'],
+        'safe_message': highlight(m['m'], q),
+        'attachments': attachments
+    }
 
 def highlight(message, query):
     if not query:
