@@ -9,4 +9,7 @@
     <span class="timestamp">{{message.formatted_ts}}</span>
   </p>
   <p class="message">{{ message.safe_message|safe }}</p>
+  {% if message.attachments %}
+    <p class="attachments">{{ message.attachments }}</p>
+  {% endif %}
 </li>

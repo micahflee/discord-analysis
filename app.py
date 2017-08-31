@@ -33,12 +33,18 @@ def search():
             server_name = json_data['meta']['servers'][json_data['meta']['channels'][channel_id]['server']]['name']
 
             for message_id in json_data['data'][channel_id]:
+                m = json_data['data'][channel_id][message_id]
+
                 # Pull the user data, timestamp, and message body from the message
-                user_index = json_data['data'][channel_id][message_id]['u']
+                user_index = m['u']
                 user_id = json_data['meta']['userindex'][user_index]
                 user_name = json_data['meta']['users'][user_id]['name']
-                formatted_ts = ts_fmt(json_data['data'][channel_id][message_id]['t'])
-                message = json_data['data'][channel_id][message_id]['m']
+                formatted_ts = ts_fmt(m['t'])
+                message = m['m']
+                if 'a' in m:
+                    attachments = str(m['a'])
+                else:
+                    attachments = None
 
                 # Is the query in the message?
                 if q.lower() in message.lower():
@@ -49,7 +55,8 @@ def search():
                         'user_name': user_name,
                         'ts': json_data['data'][channel_id][message_id]['t'],
                         'formatted_ts': formatted_ts,
-                        'safe_message': highlight(message, q)
+                        'safe_message': highlight(message, q),
+                        'attachments': attachments
                     })
 
         if len(messages) > 0:
@@ -101,6 +108,10 @@ def view(basename, channel_name, ts):
             user_id = json_data['meta']['userindex'][m['u']]
             user_name = json_data['meta']['users'][user_id]['name']
             formatted_ts = ts_fmt(json_data['data'][channel_id][message_id]['t'])
+            if 'a' in m:
+                attachments = str(m['a'])
+            else:
+                attachments = None
 
             messages.append({
                 'basename': basename,
@@ -109,7 +120,8 @@ def view(basename, channel_name, ts):
                 'user_name': user_name,
                 'ts': m['t'],
                 'formatted_ts': formatted_ts,
-                'safe_message': highlight(m['m'], q)
+                'safe_message': highlight(m['m'], q),
+                'attachments': attachments
             })
 
     # Now sort messages by timestamp
@@ -121,6 +133,9 @@ def view(basename, channel_name, ts):
     return render_template('view.html', messages=messages, q=q, description=description)
 
 def highlight(message, query):
+    if not query:
+        return message
+
     # Make sure to escape the message here
     message = str(escape(message)).replace('\n', '<br>\n')
 
