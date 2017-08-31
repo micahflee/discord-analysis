@@ -3,7 +3,7 @@ import json
 import os
 import datetime
 
-from flask import Flask, render_template, url_for, request, escape
+from flask import Flask, render_template, url_for, request, escape, flash, redirect
 app = Flask(__name__)
 
 data = None
@@ -37,7 +37,7 @@ def search():
                 user_index = json_data['data'][channel_id][message_id]['u']
                 user_id = json_data['meta']['userindex'][user_index]
                 user_name = json_data['meta']['users'][user_id]['name']
-                timestamp = datetime.datetime.fromtimestamp(json_data['data'][channel_id][message_id]['t'] / 1000)
+                formatted_ts = ts_fmt(json_data['data'][channel_id][message_id]['t'])
                 message = json_data['data'][channel_id][message_id]['m']
 
                 # Is the query in the message?
@@ -47,8 +47,8 @@ def search():
                         'channel_name': channel_name,
                         'server_name': server_name,
                         'user_name': user_name,
-                        'timestamp': json_data['data'][channel_id][message_id]['t'],
-                        'datetime': timestamp,
+                        'ts': json_data['data'][channel_id][message_id]['t'],
+                        'formatted_ts': formatted_ts,
                         'safe_message': highlight(message, q)
                     })
 
@@ -59,6 +59,66 @@ def search():
             })
 
     return render_template('search.html', files=data['files'], results=results, q=q)
+
+@app.route('/view/<basename>/<channel_name>/<int:ts>')
+def view(basename, channel_name, ts):
+    q = request.args.get('q')
+
+    # Get the proper json_data for basename
+    json_data = None
+    for file in data['files']:
+        if file['basename'] == basename:
+            json_data = file['data']
+            break
+
+    if not json_data:
+        flash('Invalid JSON file')
+        return redirect('/')
+
+    # Find the right channel
+    channel_data = None
+    server_name = None
+    for channel_id in json_data['data']:
+        if json_data['meta']['channels'][channel_id]['name'] == channel_name:
+            channel_data = json_data['data'][channel_id]
+            server_name = json_data['meta']['servers'][json_data['meta']['channels'][channel_id]['server']]['name']
+            break
+
+    if not channel_data:
+        flash('Invalid channel')
+        return redirect('/')
+
+    # Find all of the messages within an hour of the timestamp
+    one_hour = 3600000
+    range_from = ts - one_hour
+    range_to = ts + one_hour
+
+    messages = []
+    for message_id in channel_data:
+        message_ts = channel_data[message_id]['t']
+        if range_from < message_ts < range_to:
+            m = channel_data[message_id]
+            user_id = json_data['meta']['userindex'][m['u']]
+            user_name = json_data['meta']['users'][user_id]['name']
+            formatted_ts = ts_fmt(json_data['data'][channel_id][message_id]['t'])
+
+            messages.append({
+                'basename': basename,
+                'channel_name': channel_name,
+                'server_name': server_name,
+                'user_name': user_name,
+                'ts': m['t'],
+                'formatted_ts': formatted_ts,
+                'safe_message': highlight(m['m'], q)
+            })
+
+    # Now sort messages by timestamp
+    messages.sort(key=lambda x: x['ts'])
+
+    # Create a description
+    description = 'Messages in #{} from {} to {}'.format(channel_name, ts_fmt(range_from), ts_fmt(range_to))
+
+    return render_template('view.html', messages=messages, q=q, description=description)
 
 def highlight(message, query):
     # Make sure to escape the message here
@@ -86,6 +146,9 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+def ts_fmt(discord_ts):
+    return datetime.datetime.fromtimestamp(discord_ts / 1000).strftime('%b %d, %Y %I:%M:%S %p')
 
 def main():
     global data
