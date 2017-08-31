@@ -2,6 +2,7 @@
 import json
 import os
 import datetime
+import re
 
 from flask import Flask, render_template, url_for, request, escape, flash, redirect
 app = Flask(__name__)
@@ -117,9 +118,27 @@ def create_message_obj(m, basename, channel_name, server_name, json_data, q=None
         'ts': m['t'],
         'formatted_ts': ts_fmt(m['t']),
         'orig_message': m['m'],
-        'safe_message': highlight(m['m'], q),
+        'safe_message': highlight(convert_mentions(m['m'], json_data), q),
         'attachments': attachments
     }
+
+def convert_mentions(message, json_data):
+    # TODO: fix this, doesn't totally work yet
+    while True:
+        match = re.search('<@\d{18}>', message)
+        if not match:
+            return message
+
+        # What is the user id that was mentioned?
+        match_str = match.group()
+        user_id = match_str.lstrip('<@').rstrip('>')
+        if user_id in json_data['meta']['users']:
+            user_name = json_data['meta']['users'][user_id]['name']
+            message = message.replace(match_str, user_name)
+        else:
+            # If the user id doesn't appear to be valid, just return the message without
+            # replacing anything -- so we don't get stuck in an infinite loop
+            return message
 
 def highlight(message, query):
     if not query:
