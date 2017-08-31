@@ -3,7 +3,7 @@
   <p>Discord JSON files loaded:</p>
   <ul>
     {% for file in files %}
-    <li><strong>{{file.filename}}</strong> {{file.size}}</li>
+      <li><span class="size">[{{file.size}}]</span> <strong>{{file.basename}}</strong></li>
     {% endfor %}
   </ul>
 {% endblock %}

@@ -13,10 +13,13 @@
         </h1>
         <div class="search">
           <form method="get" target="/search">
+            <input type="text" name="q" class="q" placeholder="Search query" />
             <select>
               <option value="__all__">[ All ]</option>
+              {% for file in files %}
+                <option value="{{file.basename}}">{{file.basename}} [{{file.size}}]</option>
+              {% endfor %}
             </select>
-            <input type="text" name="q" class="q" placeholder="Search query" />
             <input type="submit" value="Search" />
           </form>
         </div>

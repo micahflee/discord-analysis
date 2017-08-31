@@ -27,3 +27,9 @@ body {
 .header .search .q {
   width: 600px;
 }
+
+.content .size {
+  display: inline-block;
+  width: 100px;
+  color: #666666;
+}
