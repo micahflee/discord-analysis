@@ -29,9 +29,9 @@ def import_json(filename):
 
         user = User(user_discord_id, name, discord_export)
         db.session.add(user)
-        db.session.commit()
 
         count += 1
+    db.session.commit()
     print("Added {} users".format(count))
 
     # Add the servers
@@ -41,9 +41,9 @@ def import_json(filename):
 
         server = Server(name, discord_export)
         db.session.add(server)
-        db.session.commit()
 
         count += 1
+    db.session.commit()
     print("Added {} servers".format(count))
 
     # Add the channels
@@ -55,9 +55,9 @@ def import_json(filename):
 
         channel = Channel(channel_discord_id, name, server)
         db.session.add(channel)
-        db.session.commit()
 
         count += 1
+    db.session.commit()
     print("Added {} channels".format(count))
 
     # Loop through each channel
@@ -82,9 +82,9 @@ def import_json(filename):
 
             message = Message(discord_message_id, timestamp, message, user, channel, attachments_json)
             db.session.add(message)
-            db.session.commit()
 
             count += 1
+    db.session.commit()
     print("Added {} messages".format(count))
 
 if __name__ == '__main__':
