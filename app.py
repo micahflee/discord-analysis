@@ -108,7 +108,7 @@ class Message(db.Model):
         return self.timestamp.strftime('%b %d, %Y %I:%M:%S %p')
 
     def permalink(self):
-        return '/view/{}/{}/{}'.format(self.channel.server.discord_export.basename, self.channel.name, self.timestamp.timestamp())
+        return '/view/{}/{}'.format(self.channel.id, int(self.timestamp.timestamp()))
 
     def highlight(self, query):
         # Make sure to escape the message here, and replace newslines with line breaks
@@ -151,100 +151,31 @@ def index():
 def search():
     q = request.args.get('q')
     messages = Message.query.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).all()
-    return render_template('search.html', messages=messages, q=q)
+    description = 'Search: {}'.format(q)
+    return render_template('view.html', messages=messages, q=q, description=description)
 
-"""
-@app.route('/view/<basename>/<channel_name>/<int:ts>')
-def view(basename, channel_name, ts):
+@app.route('/view/<channel_id>/<int:ts>')
+def view(channel_id, ts):
     q = request.args.get('q')
 
-    # Get the proper json_data for basename
-    json_data = None
-    for file in data['files']:
-        if file['basename'] == basename:
-            json_data = file['data']
-            break
-
-    if not json_data:
-        flash('Invalid JSON file')
-        return redirect('/')
-
-    # Find the right channel
-    channel_data = None
-    server_name = None
-    for channel_id in json_data['data']:
-        if json_data['meta']['channels'][channel_id]['name'] == channel_name:
-            channel_data = json_data['data'][channel_id]
-            server_name = json_data['meta']['servers'][json_data['meta']['channels'][channel_id]['server']]['name']
-            break
-
-    if not channel_data:
+    # Look up the Channel
+    channel = Channel.query.filter_by(id=channel_id).first()
+    if not channel:
         flash('Invalid channel')
         return redirect('/')
 
-    # Find all of the messages within an hour of the timestamp
-    one_hour = 3600000
-    range_from = ts - one_hour
-    range_to = ts + one_hour
+    # Find all of the messages in this channel within an hour of the timestamp
+    ts = datetime.datetime.fromtimestamp(ts)
+    one_hour = datetime.timedelta(hours=1)
 
-    messages = []
-    for message_id in channel_data:
-        m = channel_data[message_id]
-        message_obj = create_message_obj(m, basename, channel_name, server_name, json_data, q)
-
-        if range_from < message_obj['ts'] < range_to:
-            messages.append(message_obj)
-
-    # Now sort messages by timestamp
-    messages.sort(key=lambda x: x['ts'])
+    messages = Message.query.filter(Message.timestamp > ts - one_hour).filter(Message.timestamp < ts + one_hour).order_by(Message.timestamp).all()
 
     # Create a description
-    description = 'Messages in #{} from {} to {}'.format(channel_name, ts_fmt(range_from), ts_fmt(range_to))
+    def format_ts(ts):
+        return ts.strftime('%b %d, %Y %I:%M:%S %p')
+    description = 'Messages in #{} from {} to {}'.format(channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
 
     return render_template('view.html', messages=messages, q=q, description=description)
-
-def create_message_obj(m, basename, channel_name, server_name, json_data, q=None):
-    # Pull the user data, timestamp, and message body from the message
-    user_index = m['u']
-    user_id = json_data['meta']['userindex'][user_index]
-    user_name = json_data['meta']['users'][user_id]['name']
-
-    # Attachments
-    if 'a' in m:
-        attachments = m['a']
-    else:
-        attachments = None
-
-    return {
-        'basename': basename,
-        'channel_name': channel_name,
-        'server_name': server_name,
-        'user_name': user_name,
-        'ts': m['t'],
-        'formatted_ts': ts_fmt(m['t']),
-        'orig_message': m['m'],
-        'safe_message': highlight(convert_mentions(m['m'], json_data), q),
-        'attachments': attachments
-    }
-
-def convert_mentions(message, json_data):
-    # TODO: fix this, doesn't totally work yet
-    while True:
-        match = re.search('<@\d{18}>', message)
-        if not match:
-            return message
-
-        # What is the user id that was mentioned?
-        match_str = match.group()
-        user_id = match_str.lstrip('<@').rstrip('>')
-        if user_id in json_data['meta']['users']:
-            user_name = json_data['meta']['users'][user_id]['name']
-            message = message.replace(match_str, user_name)
-        else:
-            # If the user id doesn't appear to be valid, just return the message without
-            # replacing anything -- so we don't get stuck in an infinite loop
-            return message
-"""
 
 def main():
     app.run()
