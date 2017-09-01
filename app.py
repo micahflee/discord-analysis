@@ -5,7 +5,80 @@ import datetime
 import re
 
 from flask import Flask, render_template, url_for, request, escape, flash, redirect
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
+app.config.from_pyfile('app.cfg')
+db = SQLAlchemy(app)
+
+# An exported Discord team, representing a JSON file
+class DiscordExport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(128))
+    basename = db.Column(db.String(128))
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.basename = os.path.basename(filename)
+
+# A discord server
+class Server(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128))
+    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
+    discord_export = db.relationship('DiscordExport', backref=db.backref('discord_exports', lazy='dynamic'))
+
+    def __init__(self, name, discort_export):
+        self.name = name
+        self.discord_export = discord_export
+
+# A user in a chat room team
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    discord_id = db.Column(db.String(128))
+    name = db.Column(db.String(128))
+    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
+    discord_export = db.relationship('DiscordExport', backref=db.backref('discord_exports', lazy='dynamic'))
+
+    def __init__(self, discord_id, name, discort_export):
+        self.discord_id = discord_id
+        self.name = name
+        self.discord_export = discord_export
+
+# A channel
+class Channel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    discord_id = db.Column(db.String(128))
+    name = db.Column(db.String(128))
+    server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
+    server = db.relationship('Server', backref=db.backref('servers', lazy='dynamic'))
+
+    def __init__(self, discord_id, name, server):
+        self.discord_id = discord_id
+        self.name = name
+        self.server = server
+
+# A message posted in a channel
+class Message(db.model):
+    id = db.Column(db.Integer, primary_key=True)
+    discord_id = db.Column(db.String(128))
+    timestamp = db.Column(db.DateTime)
+    message = db.Column(db.String(1024))
+    attachments_json = db.Column(db.String(1024))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship('User', backref=db.backref('users', lazy='dynamic'))
+    channel_id = db.Column(db.Integer, db.ForeignKey('channel.id'))
+    channel = db.relationship('Channel', backref=db.backref('channels', lazy='dynamic'))
+
+    def __init__(self, discord_id, timestamp, message, user, channel, attachments_json=None):
+        self.discord_id = discord_id
+        self.timestamp = datetime.datetime.fromtimestamp(timestamp / 1000)
+        self.message = message
+        self.user = user
+        self.channel = channel
+        if attachments_json:
+            self.attachments_json = attachments_json
 
 data = None
 
