@@ -168,7 +168,7 @@ def view(channel_id, ts):
     ts = datetime.datetime.fromtimestamp(ts)
     one_hour = datetime.timedelta(hours=1)
 
-    messages = Message.query.filter(Message.timestamp > ts - one_hour).filter(Message.timestamp < ts + one_hour).order_by(Message.timestamp).all()
+    messages = Message.query.filter_by(channel=channel).filter(Message.timestamp > ts - one_hour).filter(Message.timestamp < ts + one_hour).order_by(Message.timestamp).all()
 
     # Create a description
     def format_ts(ts):
