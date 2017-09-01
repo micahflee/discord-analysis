@@ -9,6 +9,12 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config.from_pyfile('app.cfg')
+
+# Hack to support mysql and unicode
+use_mysql = app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql')
+if use_mysql:
+    from sqlalchemy.dialects.mysql import VARCHAR, TEXT
+
 db = SQLAlchemy(app)
 
 # An exported Discord team, representing a JSON file
@@ -38,7 +44,10 @@ class DiscordExport(db.Model):
 # A discord server
 class Server(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128))
+    if use_mysql:
+        name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+    else:
+        name = db.Column(db.String(128))
 
     channels = db.relationship("Channel", back_populates="server")
 
@@ -53,7 +62,10 @@ class Server(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
-    name = db.Column(db.String(128))
+    if use_mysql:
+        name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+    else:
+        name = db.Column(db.String(128))
 
     messages = db.relationship("Message", back_populates="user")
 
@@ -69,7 +81,10 @@ class User(db.Model):
 class Channel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
-    name = db.Column(db.String(128))
+    if use_mysql:
+        name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+    else:
+        name = db.Column(db.String(128))
 
     messages = db.relationship("Message", back_populates="channel")
 
@@ -86,8 +101,12 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
     timestamp = db.Column(db.DateTime)
-    message = db.Column(db.String(1024))
-    attachments_json = db.Column(db.String(1024))
+    if use_mysql:
+        message = db.Column(VARCHAR(1024, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+        attachments_json = db.Column(VARCHAR(1024, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+    else:
+        message = db.Column(db.String(1024))
+        attachments_json = db.Column(db.String(1024))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship("User", back_populates="messages")
