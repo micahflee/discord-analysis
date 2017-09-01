@@ -17,6 +17,9 @@ class DiscordExport(db.Model):
     filename = db.Column(db.String(128))
     basename = db.Column(db.String(128))
 
+    servers = db.relationship("Server", back_populates="discord_export")
+    users = db.relationship("User", back_populates="discord_export")
+
     def __init__(self, filename):
         self.filename = filename
         self.basename = os.path.basename(filename)
@@ -25,10 +28,13 @@ class DiscordExport(db.Model):
 class Server(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128))
-    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
-    discord_export = db.relationship('DiscordExport', backref=db.backref('discord_exports', lazy='dynamic'))
 
-    def __init__(self, name, discort_export):
+    channels = db.relationship("Channel", back_populates="server")
+
+    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
+    discord_export = db.relationship("DiscordExport", back_populates="servers")
+
+    def __init__(self, name, discord_export):
         self.name = name
         self.discord_export = discord_export
 
@@ -37,10 +43,13 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
     name = db.Column(db.String(128))
-    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
-    discord_export = db.relationship('DiscordExport', backref=db.backref('discord_exports', lazy='dynamic'))
 
-    def __init__(self, discord_id, name, discort_export):
+    messages = db.relationship("Message", back_populates="user")
+
+    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
+    discord_export = db.relationship("DiscordExport", back_populates="users")
+
+    def __init__(self, discord_id, name, discord_export):
         self.discord_id = discord_id
         self.name = name
         self.discord_export = discord_export
@@ -50,8 +59,11 @@ class Channel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
     name = db.Column(db.String(128))
+
+    messages = db.relationship("Message", back_populates="channel")
+
     server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
-    server = db.relationship('Server', backref=db.backref('servers', lazy='dynamic'))
+    server = db.relationship("Server", back_populates="channels")
 
     def __init__(self, discord_id, name, server):
         self.discord_id = discord_id
@@ -59,7 +71,7 @@ class Channel(db.Model):
         self.server = server
 
 # A message posted in a channel
-class Message(db.model):
+class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
     timestamp = db.Column(db.DateTime)
@@ -67,9 +79,10 @@ class Message(db.model):
     attachments_json = db.Column(db.String(1024))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    user = db.relationship('User', backref=db.backref('users', lazy='dynamic'))
+    user = db.relationship("User", back_populates="messages")
+
     channel_id = db.Column(db.Integer, db.ForeignKey('channel.id'))
-    channel = db.relationship('Channel', backref=db.backref('channels', lazy='dynamic'))
+    channel = db.relationship("Channel", back_populates="messages")
 
     def __init__(self, discord_id, timestamp, message, user, channel, attachments_json=None):
         self.discord_id = discord_id

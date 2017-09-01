@@ -49,4 +49,5 @@ tags
 # Project-specific
 config.json
 app.cfg
-database.sqlite
+database.sqlite3
+database.sqlite3-journal
