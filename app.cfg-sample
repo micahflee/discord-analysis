@@ -1,10 +1,9 @@
 import os
-# SQLAlchemy database configuration. Here we are using a local sqlite3
-# database
+
+# SQLAlchemy
 SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/database.sqlite3' % (os.path.dirname(__file__))
-SQLALCHEMY_TRACK_MODIFICATIONS = True
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_ECHO = False
-# Generate a random secret key
-SECRET_KEY = os.urandom(24)
+
 # Disable debugging
 DEBUG = False
