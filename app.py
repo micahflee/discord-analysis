@@ -104,6 +104,42 @@ class Message(db.Model):
         if attachments_json:
             self.attachments_json = attachments_json
 
+    def formatted_timestamp(self):
+        return self.timestamp.strftime('%b %d, %Y %I:%M:%S %p')
+
+    def permalink(self):
+        return '/view/{}/{}/{}'.format(self.channel.server.discord_export.basename, self.channel.name, self.timestamp.timestamp())
+
+    def highlight(self, query):
+        # Make sure to escape the message here, and replace newslines with line breaks
+        m = str(escape(self.message)).replace('\n', '<br>\n')
+
+        # If there isn't a query, return the original message
+        if not query:
+            return m
+
+        new_m = ''
+        index = 0
+        while True:
+            new_index = m.lower().find(query.lower(), index)
+            if new_index > 0:
+                # Found
+                new_m += m[index:new_index]
+                new_m += "<span class='highlight'>{}</span>".format(m[new_index:new_index+len(query)])
+                index = new_index + len(query)
+            else:
+                # Not found
+                new_m += m[index:]
+                break
+
+        return new_m
+
+    def attachments(self):
+        if not self.attachments_json:
+            return []
+
+        return json.loads(self.attachments_json.replace("'", '"'))
+
 data = None
 
 @app.route('/')
@@ -114,39 +150,10 @@ def index():
 @app.route('/search')
 def search():
     q = request.args.get('q')
+    messages = Message.query.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).all()
+    return render_template('search.html', messages=messages, q=q)
 
-    # The result data is organized by json file
-    results = []
-
-    # Loop through each file
-    for file in data['files']:
-        messages = []
-
-        basename = file['basename']
-        json_data = file['data']
-
-        # Loop through each channel
-        for channel_id in json_data['data']:
-            # Get the channel name and server name
-            channel_name = json_data['meta']['channels'][channel_id]['name']
-            server_name = json_data['meta']['servers'][json_data['meta']['channels'][channel_id]['server']]['name']
-
-            for message_id in json_data['data'][channel_id]:
-                m = json_data['data'][channel_id][message_id]
-                message_obj = create_message_obj(m, basename, channel_name, server_name, json_data, q)
-
-                # Is the query in the message?
-                if q.lower() in message_obj['orig_message'].lower():
-                    messages.append(message_obj)
-
-        if len(messages) > 0:
-            results.append({
-                'basename': basename,
-                'messages': messages
-            })
-
-    return render_template('search.html', files=data['files'], results=results, q=q)
-
+"""
 @app.route('/view/<basename>/<channel_name>/<int:ts>')
 def view(basename, channel_name, ts):
     q = request.args.get('q')
@@ -237,55 +244,9 @@ def convert_mentions(message, json_data):
             # If the user id doesn't appear to be valid, just return the message without
             # replacing anything -- so we don't get stuck in an infinite loop
             return message
-
-def highlight(message, query):
-    if not query:
-        return message
-
-    # Make sure to escape the message here
-    message = str(escape(message)).replace('\n', '<br>\n')
-
-    new_message = ''
-    index = 0
-    while True:
-        new_index = message.lower().find(query.lower(), index)
-        if new_index > 0:
-            # Found
-            new_message += message[index:new_index]
-            new_message += "<span class='highlight'>{}</span>".format(message[new_index:new_index+len(query)])
-            index = new_index + len(query)
-        else:
-            # Not found
-            new_message += message[index:]
-            break
-
-    return new_message
-
-def ts_fmt(discord_ts):
-    return datetime.datetime.fromtimestamp(discord_ts / 1000).strftime('%b %d, %Y %I:%M:%S %p')
+"""
 
 def main():
-    global data
-    data = {}
-
-    # Load the config file
-    with open('config.json') as f:
-        data['config'] = json.load(f)
-
-    # Prepare all the data
-    data['files'] = []
-    for filename in data['config']['filenames']:
-        print("[] Parsing {}".format(filename))
-        with open(filename) as f:
-            json_data = json.load(f)
-
-        data['files'].append({
-            'filename': filename,
-            'basename': os.path.basename(filename),
-            'size': os.stat(filename).st_size,
-            'data': json_data
-        })
-
     app.run()
 
 if __name__ == '__main__':

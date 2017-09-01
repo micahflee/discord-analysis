@@ -1,15 +1,12 @@
 {% extends "layout.html" %}
 {% block content %}
 
-{% for result in results %}
-  <div class="results">
-    <div class="results-header">Results for: {{result.basename}}</div>
-    <ul>
-      {% for message in result.messages %}
-        {% include 'message.html' %}
-      {% endfor %}
-    </ul>
-  </div>
-{% endfor %}
+<div class="results">
+  <ul>
+    {% for message in messages %}
+      {% include 'message.html' %}
+    {% endfor %}
+  </ul>
+</div>
 
 {% endblock %}
