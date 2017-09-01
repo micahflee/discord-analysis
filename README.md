@@ -4,10 +4,6 @@ A tool to search Discord JSON files for keywords, and showing you specific messa
 
 ## Getting started
 
-Copy `config.json-sample` to `config.json`, and then edit it.
-
-Copy `app.cfg-sample` to `app.cfg` and edit it to specify database settings.
-
 Install dependencies:
 
 ```sh
@@ -15,8 +11,22 @@ $ virtualenv-3 env
 $ . env/bin/activate
 (env) $ pip3 install -r requirements.txt
 ```
+
+Copy `app.cfg-sample` to `app.cfg` and edit it to specify database settings.
+
+Initialize the database:
+
+```sh
+(env) $ ./admin.py create-db
+(env) $ ./admin.py import-json [filename.json] # do this for each JSON file
+```
+
 To start the app:
 
 ```sh
 (env) $ ./app.py
 ```
+
+## Simple command line tool
+
+You can also use `discord-json-search` to search an individual JSON file for keywords.

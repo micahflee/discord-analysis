@@ -47,7 +47,6 @@ tags
 .DS_Store
 
 # Project-specific
-config.json
 app.cfg
 database.sqlite3
 database.sqlite3-journal
