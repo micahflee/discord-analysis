@@ -2,8 +2,8 @@
 {% block content %}
   <p>Discord JSON files loaded:</p>
   <ul>
-    {% for file in files %}
-      <li><span class="size">[{{file.size}}]</span> <strong>{{file.basename}}</strong></li>
+    {% for de in data_exports %}
+      <li><span class="size">[{{ de.human_readable_size() }}]</span> <strong>{{ de.basename }}</strong></li>
     {% endfor %}
   </ul>
 {% endblock %}

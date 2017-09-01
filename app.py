@@ -16,6 +16,7 @@ class DiscordExport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(128))
     basename = db.Column(db.String(128))
+    size = db.Column(db.Integer)
 
     servers = db.relationship("Server", back_populates="discord_export")
     users = db.relationship("User", back_populates="discord_export")
@@ -23,6 +24,16 @@ class DiscordExport(db.Model):
     def __init__(self, filename):
         self.filename = filename
         self.basename = os.path.basename(filename)
+        self.size = os.stat(filename).st_size
+
+    def human_readable_size(self):
+        num = self.size
+        suffix='B'
+        for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+            if abs(num) < 1024.0:
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f%s%s" % (num, 'Yi', suffix)
 
 # A discord server
 class Server(db.Model):
@@ -97,7 +108,8 @@ data = None
 
 @app.route('/')
 def index():
-    return render_template('index.html', files=data['files'])
+    data_exports = DiscordExport.query.all()
+    return render_template('index.html', data_exports=data_exports)
 
 @app.route('/search')
 def search():
@@ -249,13 +261,6 @@ def highlight(message, query):
 
     return new_message
 
-def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
-
 def ts_fmt(discord_ts):
     return datetime.datetime.fromtimestamp(discord_ts / 1000).strftime('%b %d, %Y %I:%M:%S %p')
 
@@ -277,7 +282,7 @@ def main():
         data['files'].append({
             'filename': filename,
             'basename': os.path.basename(filename),
-            'size': sizeof_fmt(os.stat(filename).st_size),
+            'size': os.stat(filename).st_size,
             'data': json_data
         })
 
