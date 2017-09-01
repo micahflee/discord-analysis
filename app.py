@@ -102,11 +102,11 @@ class Message(db.Model):
     discord_id = db.Column(db.String(128))
     timestamp = db.Column(db.DateTime)
     if use_mysql:
-        message = db.Column(VARCHAR(1024, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
-        attachments_json = db.Column(VARCHAR(1024, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+        message = db.Column(VARCHAR(4096, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
+        attachments_json = db.Column(VARCHAR(4096, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
     else:
-        message = db.Column(db.String(1024))
-        attachments_json = db.Column(db.String(1024))
+        message = db.Column(db.String(4096))
+        attachments_json = db.Column(db.String(4096))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship("User", back_populates="messages")
