@@ -17,37 +17,6 @@ if use_mysql:
 
 db = SQLAlchemy(app)
 
-# An exported Discord team, representing a JSON file
-class DiscordExport(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(128))
-    basename = db.Column(db.String(128))
-    size = db.Column(db.Integer)
-
-    servers = db.relationship("Server", back_populates="discord_export")
-    users = db.relationship("User", back_populates="discord_export")
-    messages = db.relationship("Message", back_populates="discord_export")
-
-    def __init__(self, filename):
-        self.filename = filename
-        self.basename = os.path.basename(filename)
-        self.size = os.stat(filename).st_size
-
-    def human_readable_size(self):
-        num = self.size
-        suffix='B'
-        for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
-            if abs(num) < 1024.0:
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
-        return "%.1f%s%s" % (num, 'Yi', suffix)
-
-    def check_str_id(self, str_id):
-        try:
-            return self.id == int(str_id)
-        except:
-            return False
-
 # A discord server
 class Server(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,19 +25,18 @@ class Server(db.Model):
     else:
         name = db.Column(db.String(128))
 
+    users = db.relationship("User", back_populates="server")
     channels = db.relationship("Channel", back_populates="server")
+    messages = db.relationship("Message", back_populates="server")
 
-    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
-    discord_export = db.relationship("DiscordExport", back_populates="servers")
-
-    def __init__(self, name, discord_export):
+    def __init__(self, name):
         self.name = name
-        self.discord_export = discord_export
 
 # A user in a chat room team
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discord_id = db.Column(db.String(128))
+
     if use_mysql:
         name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
     else:
@@ -76,13 +44,9 @@ class User(db.Model):
 
     messages = db.relationship("Message", back_populates="user")
 
-    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
-    discord_export = db.relationship("DiscordExport", back_populates="users")
-
-    def __init__(self, discord_id, name, discord_export):
+    def __init__(self, discord_id, name):
         self.discord_id = discord_id
         self.name = name
-        self.discord_export = discord_export
 
 # A channel
 class Channel(db.Model):
@@ -98,10 +62,10 @@ class Channel(db.Model):
     server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
     server = db.relationship("Server", back_populates="channels")
 
-    def __init__(self, discord_id, name, server):
+    def __init__(self, server, discord_id, name):
+        self.server = server
         self.discord_id = discord_id
         self.name = name
-        self.server = server
 
 # A message posted in a channel
 class Message(db.Model):
@@ -121,16 +85,16 @@ class Message(db.Model):
     channel_id = db.Column(db.Integer, db.ForeignKey('channel.id'))
     channel = db.relationship("Channel", back_populates="messages")
 
-    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
-    discord_export = db.relationship("DiscordExport", back_populates="messages")
+    server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
+    server = db.relationship("Server", back_populates="messages")
 
-    def __init__(self, discord_id, timestamp, message, user, channel, discord_export, attachments_json=None):
+    def __init__(self, server, discord_id, timestamp, message, user, channel, attachments_json=None):
+        self.server = server
         self.discord_id = discord_id
         self.timestamp = datetime.datetime.fromtimestamp(timestamp / 1000)
         self.message = message
         self.user = user
         self.channel = channel
-        self.discord_export = discord_export
         if attachments_json:
             self.attachments_json = attachments_json
 
@@ -169,6 +133,32 @@ class Message(db.Model):
             return []
 
         return json.loads(self.attachments_json)
+
+class ServerStats(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_count = db.Column(db.Integer)
+    channel_count = db.Column(db.Integer)
+    message_count = db.Column(db.Integer)
+
+    channel_list_json = db.Column(db.String(4096))
+    
+    server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
+    server = db.relationship("Server", back_populates="channels")
+    
+    def __init__(self, server):
+        self.server = server
+
+    def update(self):
+        self.user_count = User.query.filter_by(server=self.server).count()
+        self.channel_count = Channel.query.filter_by(server=self.server).count()
+        self.message_count = Message.query.filter_by(server=self.server).count()
+
+        channel_list = []
+        for channel in Channel.query.filter_by(server=self.server).all():
+            channel_list.append(channel.name)
+        self.channel_list_json = json.dumps(channel_list)
+
 
 data = None
 
@@ -229,3 +219,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
