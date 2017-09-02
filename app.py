@@ -149,26 +149,26 @@ def index():
             'channels': ', '.join(['#'+_.name for _ in channels])
         })
 
-    return render_template('index.html', server_stats=server_stats)
+    return render_template('index.html', servers=servers, server_stats=server_stats)
 
 @app.route('/search')
 def search():
     q = request.args.get('q')
-    de = request.args.get('de')
-    discord_export = DiscordExport.query.filter_by(id=de).first()
+    s = request.args.get('s')
+    server = Server.query.filter_by(id=s).first()
 
     messages = Message.query
-    if de:
-        messages = messages.filter_by(discord_export=discord_export)
+    if server:
+        messages = messages.filter_by(server=server)
     messages = messages.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).all()
 
-    if de:
-        description = 'Search {}: {}'.format(discord_export.basename, q)
+    if server:
+        description = 'Search {}: {}'.format(server.name, q)
     else:
         description = 'Search: {}'.format(q)
 
-    discord_exports = DiscordExport.query.all()
-    return render_template('view.html', q=q, de=de, discord_exports=discord_exports, messages=messages, description=description)
+    servers = Server.query.all()
+    return render_template('view.html', q=q, s=s, servers=servers, messages=messages, description=description)
 
 @app.route('/view/<channel_id>/<int:ts>')
 def view(channel_id, ts):

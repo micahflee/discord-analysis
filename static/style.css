@@ -83,11 +83,6 @@ body {
   font-size: 0.8em;
 }
 
-.content .results .json-filename {
-  color: #999999;
-  font-size: 0.8em;
-}
-
 .content .results .user-name {
   font-weight: bold;
   margin-right: 10px;

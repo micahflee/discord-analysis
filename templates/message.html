@@ -2,8 +2,7 @@
   <p>
     <span class="user-name">{{ message.user.name }}</span>
     <span class="channel-name">#{{ message.channel.name }}</span>
-    <span class="server-name">[server: {{ message.channel.server.name }}]</span>
-    <span class="json-filename">[JSON file: {{ message.channel.server.discord_export.basename }}]</span>
+    <span class="server-name">[server: {{ message.server.name }}]</span>
     <span class="permalink"><a href="{{ message.permalink() }}?q={{q}}">view</a></span>
   </p>
   <p>
