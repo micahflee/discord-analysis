@@ -28,10 +28,21 @@ body {
   width: 600px;
 }
 
-.content .size {
-  display: inline-block;
-  width: 100px;
-  color: #666666;
+.content .stats table {
+    border: 1px solid #000000;
+}
+
+.content .stats table tr {
+    padding: 10px;
+}
+
+.content .stats table th {
+    padding: 10px 20px;
+    border-bottom: 1px solid #AAAAAA;
+}
+
+.content .stats table td {
+    padding: 10px 20px;
 }
 
 .content .results {

@@ -137,8 +137,19 @@ data = None
 
 @app.route('/')
 def index():
-    discord_exports = DiscordExport.query.all()
-    return render_template('index.html', discord_exports=discord_exports)
+    server_stats = []
+
+    servers = Server.query.all()
+    for server in servers:
+        message_count = Message.query.filter_by(server=server).count()
+        channels = Channel.query.filter_by(server=server).all()
+        server_stats.append({
+            'name': server.name,
+            'message_count': message_count,
+            'channels': ', '.join(['#'+_.name for _ in channels])
+        })
+
+    return render_template('index.html', server_stats=server_stats)
 
 @app.route('/search')
 def search():

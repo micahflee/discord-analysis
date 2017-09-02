@@ -1,9 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
-  <p>Discord JSON files loaded:</p>
-  <ul>
-    {% for discord_export in discord_exports %}
-      <li><span class="size">[{{ discord_export.human_readable_size() }}]</span> <strong>{{ discord_export.basename }}</strong></li>
+<div class="stats">
+  <table>
+    <tr>
+      <th>Server</th>
+      <th>Messages</th>
+      <th>Channels</th>
+    </tr>
+    {% for server in server_stats %}
+      <tr>
+        <td>{{ server.name }}</td>
+        <td>{{ server.message_count }}</td>
+        <td>{{ server.channels }}</td>
+      </tr>
     {% endfor %}
-  </ul>
+  </table>
+</div>
 {% endblock %}
