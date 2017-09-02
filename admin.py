@@ -4,6 +4,7 @@ import sys
 import argparse
 import json
 import datetime
+import glob
 import sqlalchemy
 from app import app, db, Server, User, Channel, Message
 
@@ -19,6 +20,8 @@ def create_db():
         db.create_all()
 
 def import_json(filename):
+    print("Importing: {}".format(filename))
+
     # Import JSON file
     with open(filename) as f:
         data = json.load(f)
@@ -102,6 +105,9 @@ def import_json(filename):
                 out('.')
         out('\n')
 
+    print("Import complete")
+    print("")
+
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
@@ -117,7 +123,9 @@ if __name__ == '__main__':
         create_db()
 
     elif cmd == 'import-json':
-        import_json(args.filename)
+        filenames = glob.glob(args.filename.replace('~', os.environ['HOME']))
+        for filename in filenames:
+            import_json(filename)
 
     else:
         parser.print_help()
