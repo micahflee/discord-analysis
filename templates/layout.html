@@ -14,6 +14,14 @@
         <div class="search">
           <form method="get" action="/search">
             <input type="text" name="q" class="q" placeholder="Search query" value="{{q}}" />
+            <select name="de" class="de">
+              <option value="">[all servers]</option>
+              {% for discord_export in discord_exports %}
+                <option value="{{ discord_export.id }}" {% if discord_export.check_str_id(de) %} selected="selected"{% endif %}>
+                  {{ discord_export.basename }}
+                </option>
+              {% endfor %}
+            </select>
             <input type="submit" value="Search" />
           </form>
         </div>

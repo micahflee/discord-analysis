@@ -26,6 +26,7 @@ class DiscordExport(db.Model):
 
     servers = db.relationship("Server", back_populates="discord_export")
     users = db.relationship("User", back_populates="discord_export")
+    messages = db.relationship("Message", back_populates="discord_export")
 
     def __init__(self, filename):
         self.filename = filename
@@ -40,6 +41,12 @@ class DiscordExport(db.Model):
                 return "%3.1f%s%s" % (num, unit, suffix)
             num /= 1024.0
         return "%.1f%s%s" % (num, 'Yi', suffix)
+
+    def check_str_id(self, str_id):
+        try:
+            return self.id == int(str_id)
+        except:
+            return False
 
 # A discord server
 class Server(db.Model):
@@ -114,12 +121,16 @@ class Message(db.Model):
     channel_id = db.Column(db.Integer, db.ForeignKey('channel.id'))
     channel = db.relationship("Channel", back_populates="messages")
 
-    def __init__(self, discord_id, timestamp, message, user, channel, attachments_json=None):
+    discord_export_id = db.Column(db.Integer, db.ForeignKey('discord_export.id'))
+    discord_export = db.relationship("DiscordExport", back_populates="messages")
+
+    def __init__(self, discord_id, timestamp, message, user, channel, discord_export, attachments_json=None):
         self.discord_id = discord_id
         self.timestamp = datetime.datetime.fromtimestamp(timestamp / 1000)
         self.message = message
         self.user = user
         self.channel = channel
+        self.discord_export = discord_export
         if attachments_json:
             self.attachments_json = attachments_json
 
@@ -157,25 +168,39 @@ class Message(db.Model):
         if not self.attachments_json:
             return []
 
-        return json.loads(self.attachments_json.replace("'", '"'))
+        return json.loads(self.attachments_json)
 
 data = None
 
 @app.route('/')
 def index():
-    data_exports = DiscordExport.query.all()
-    return render_template('index.html', data_exports=data_exports)
+    discord_exports = DiscordExport.query.all()
+    return render_template('index.html', discord_exports=discord_exports)
 
 @app.route('/search')
 def search():
     q = request.args.get('q')
-    messages = Message.query.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).all()
-    description = 'Search: {}'.format(q)
-    return render_template('view.html', messages=messages, q=q, description=description)
+    de = request.args.get('de')
+    discord_export = DiscordExport.query.filter_by(id=de).first()
+
+    messages = Message.query
+    if de:
+        messages = messages.filter_by(discord_export=discord_export)
+    messages = messages.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).all()
+
+    if de:
+        description = 'Search {}: {}'.format(discord_export.basename, q)
+    else:
+        description = 'Search: {}'.format(q)
+
+    discord_exports = DiscordExport.query.all()
+    return render_template('view.html', q=q, de=de, discord_exports=discord_exports, messages=messages, description=description)
 
 @app.route('/view/<channel_id>/<int:ts>')
 def view(channel_id, ts):
     q = request.args.get('q')
+    de = request.args.get('de')
+    discord_export = DiscordExport.query.filter_by(id=de).first()
 
     # Look up the Channel
     channel = Channel.query.filter_by(id=channel_id).first()
@@ -192,9 +217,10 @@ def view(channel_id, ts):
     # Create a description
     def format_ts(ts):
         return ts.strftime('%b %d, %Y %I:%M:%S %p')
-    description = 'Messages in #{} from {} to {}'.format(channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
+    description = 'Messages in {}, #{} from {} to {}'.format(de.basename, channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
 
-    return render_template('view.html', messages=messages, q=q, description=description)
+    discord_exports = DiscordExport.query.all()
+    return render_template('view.html', q=q, de=de, discord_exports=discord_exports, messages=messages, description=description)
 
 def main():
     app.run()
