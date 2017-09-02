@@ -199,14 +199,16 @@ def search():
 @app.route('/view/<channel_id>/<int:ts>')
 def view(channel_id, ts):
     q = request.args.get('q')
-    de = request.args.get('de')
-    discord_export = DiscordExport.query.filter_by(id=de).first()
 
     # Look up the Channel
     channel = Channel.query.filter_by(id=channel_id).first()
     if not channel:
         flash('Invalid channel')
         return redirect('/')
+
+    # Find the DiscordExport
+    discord_export = channel.server.discord_export
+    de = discord_export.id
 
     # Find all of the messages in this channel within an hour of the timestamp
     ts = datetime.datetime.fromtimestamp(ts)
@@ -217,7 +219,7 @@ def view(channel_id, ts):
     # Create a description
     def format_ts(ts):
         return ts.strftime('%b %d, %Y %I:%M:%S %p')
-    description = 'Messages in {}, #{} from {} to {}'.format(de.basename, channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
+    description = 'Messages in {}, #{} from {} to {}'.format(discord_export.basename, channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
 
     discord_exports = DiscordExport.query.all()
     return render_template('view.html', q=q, de=de, discord_exports=discord_exports, messages=messages, description=description)
