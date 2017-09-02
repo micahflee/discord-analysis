@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 import os
+import sys
 import argparse
 import json
 import datetime
+import sqlalchemy
 from app import app, db, Server, User, Channel, Message
+
+def out(s):
+    sys.stdout.write(s)
+    sys.stdout.flush()
 
 def create_db():
     db_path = app.config['SQLALCHEMY_DATABASE_URI'][10:] # strip "sqlite://"
@@ -18,78 +24,83 @@ def import_json(filename):
         data = json.load(f)
 
     # Add the servers
-    count = 0
+    out('Adding servers: ')
     for item in data['meta']['servers']:
         name = item['name']
 
-        server = Server.query.filter_by(name=name).first()
-        if not server:
+        try:
             server = Server(name)
             db.session.add(server)
-            count += 1
-
-    db.session.commit()
-    print("Added {} servers".format(count))
+            db.session.commit()
+            out('+')
+        except sqlalchemy.exc.IntegrityError:
+            db.session.rollback()
+            out('.')
+    out('\n')
 
     # Add the users
-    count = 0
+    out('Adding users: ')
     for user_discord_id in data['meta']['users']:
         name = data['meta']['users'][user_discord_id]['name']
 
-        user = User.query.filter_by(discord_id=user_discord_id).first()
-        if not user:
+        try:
             user = User(user_discord_id, name)
             db.session.add(user)
-            count += 1
-
-    db.session.commit()
-    print("Added {} users".format(count))
+            db.session.commit()
+            out('+')
+        except sqlalchemy.exc.IntegrityError:
+            db.session.rollback()
+            out('.')
+    out('\n')
 
     # Add the channels
-    count = 0
+    out('Adding channels: ')
     for channel_discord_id in data['meta']['channels']:
         name = data['meta']['channels'][channel_discord_id]['name']
         server_id = data['meta']['channels'][channel_discord_id]['server']
         server = Server.query.filter_by(name=data['meta']['servers'][server_id]['name']).first()
 
-        channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
-        if not channel:
+        try:
             channel = Channel(server, channel_discord_id, name)
             db.session.add(channel)
-            count += 1
-
-    db.session.commit()
-    print("Added {} channels".format(count))
+            db.session.commit()
+            out('+')
+        except sqlalchemy.exc.IntegrityError:
+            db.session.rollback()
+            out('.')
+    out('\n')
 
     # Loop through each channel in data
     count = 0
-    for discord_channel_id in data['data']:
+    for channel_discord_id in data['data']:
         # Get the channel
         channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
 
         # Loop through each message in this channel
-        for discord_message_id in data['data'][discord_channel_id]:
-            message = Message.query.filter_by(discord_id=discord_message_id).first()
-            if not message:
-                timestamp = data['data'][discord_channel_id][discord_message_id]['t']
-                message = data['data'][discord_channel_id][discord_message_id]['m']
+        out('Adding messages from {}, #{}: '.format(channel.server.name, channel.name))
+        for discord_message_id in data['data'][channel_discord_id]:
+            try:
+                timestamp = data['data'][channel_discord_id][discord_message_id]['t']
+                message = data['data'][channel_discord_id][discord_message_id]['m']
 
-                user_index = data['data'][discord_channel_id][discord_message_id]['u']
+                user_index = data['data'][channel_discord_id][discord_message_id]['u']
                 discord_user_id = data['meta']['userindex'][user_index]
 
                 user = User.query.filter_by(discord_id=discord_user_id).first()
 
-                if 'a' in data['data'][discord_channel_id][discord_message_id]:
-                    attachments_json = json.dumps(data['data'][discord_channel_id][discord_message_id]['a'])
+                if 'a' in data['data'][channel_discord_id][discord_message_id]:
+                    attachments_json = json.dumps(data['data'][channel_discord_id][discord_message_id]['a'])
                 else:
                     attachments_json = None
 
                 message = Message(channel.server, discord_message_id, timestamp, message, user, channel, attachments_json)
                 db.session.add(message)
-                count += 1
-
-    db.session.commit()
-    print("Added {} messages".format(count))
+                db.session.commit()
+                out('+')
+            except sqlalchemy.exc.IntegrityError:
+                db.session.rollback()
+                out('.')
+        out('\n')
 
 if __name__ == '__main__':
     # Parse arguments
