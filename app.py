@@ -25,7 +25,6 @@ class Server(db.Model):
     else:
         name = db.Column(db.String(128))
 
-    users = db.relationship("User", back_populates="server")
     channels = db.relationship("Channel", back_populates="server")
     messages = db.relationship("Message", back_populates="server")
 
@@ -133,32 +132,6 @@ class Message(db.Model):
             return []
 
         return json.loads(self.attachments_json)
-
-class ServerStats(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-    user_count = db.Column(db.Integer)
-    channel_count = db.Column(db.Integer)
-    message_count = db.Column(db.Integer)
-
-    channel_list_json = db.Column(db.String(4096))
-    
-    server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
-    server = db.relationship("Server", back_populates="channels")
-    
-    def __init__(self, server):
-        self.server = server
-
-    def update(self):
-        self.user_count = User.query.filter_by(server=self.server).count()
-        self.channel_count = Channel.query.filter_by(server=self.server).count()
-        self.message_count = Message.query.filter_by(server=self.server).count()
-
-        channel_list = []
-        for channel in Channel.query.filter_by(server=self.server).all():
-            channel_list.append(channel.name)
-        self.channel_list_json = json.dumps(channel_list)
-
 
 data = None
 
