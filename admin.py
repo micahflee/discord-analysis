@@ -71,16 +71,19 @@ def import_json(filename):
             timestamp = data['data'][discord_channel_id][discord_message_id]['t']
             message = data['data'][discord_channel_id][discord_message_id]['m']
 
-            user_index = data['data'][discord_channel_id][discord_message_id]['u']
-            discord_user_id = data['meta']['userindex'][user_index]
+            # In the de-duped json files, message['u'] points to the user_id itself, not the index
+            #user_index = data['data'][discord_channel_id][discord_message_id]['u']
+            #discord_user_id = data['meta']['userindex'][user_index]
+            discord_user_id = data['data'][discord_channel_id][discord_message_id]['u']
+
             user = User.query.filter_by(discord_id=discord_user_id).first()
 
             if 'a' in data['data'][discord_channel_id][discord_message_id]:
-                attachments_json = str(data['data'][discord_channel_id][discord_message_id]['a'])
+                attachments_json = json.dumps(data['data'][discord_channel_id][discord_message_id]['a'])
             else:
                 attachments_json = None
 
-            message = Message(discord_message_id, timestamp, message, user, channel, attachments_json)
+            message = Message(discord_message_id, timestamp, message, user, channel, discord_export, attachments_json)
             db.session.add(message)
 
             count += 1
