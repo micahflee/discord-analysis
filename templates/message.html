@@ -1,6 +1,6 @@
 <li>
   <p>
-    <span class="user-name">{{ message.user.name }}</span>
+    <span class="user-name"><a href="{{ message.user.permalink() }}">{{ message.user.name }}</a></span>
     <span class="channel-name">#{{ message.channel.name }}</span>
     <span class="server-name">[server: {{ message.server.name }}]</span>
     <span class="permalink"><a href="{{ message.permalink() }}?q={{q}}">view</a></span>
