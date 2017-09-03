@@ -4,12 +4,12 @@ body {
 
 .wrapper {
   margin: 10px;
+  display: table;
 }
 
 .sidebar {
-  display: inline-block;
-  width: 300px;
-  float: left;
+  display: table-cell;
+  min-width: 300px;
 }
 
 .sidebar h3 {
@@ -30,6 +30,19 @@ body {
 .sidebar .server .message-count {
   font-size: 10px;
   color: #666666;
+}
+
+.content {
+  display: table-cell;
+  width: 100%;
+}
+
+.content img {
+  max-width: 900px;
+}
+
+.content .message {
+  word-break: break-all;
 }
 
 .content .search {
