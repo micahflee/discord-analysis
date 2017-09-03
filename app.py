@@ -194,8 +194,8 @@ def view(message_id):
         return redirect('/')
 
     # Find messages before and after this one
-    prev_messages = Message.query.filter(Message.id < message.id).order_by(Message.id).limit(20).all()
-    next_messages = Message.query.filter(Message.id > message.id).order_by(Message.id).limit(20).all()
+    prev_messages = Message.query.filter_by(channel=message.channel).filter(Message.id < message.id).order_by(Message.id).limit(20).all()
+    next_messages = Message.query.filter_by(channel=message.channel).filter(Message.id > message.id).order_by(Message.id).limit(20).all()
 
     # Create a description
     description = 'Message by {}, in {}, #{}'.format(message.user.name, message.server.name, message.channel.name)
