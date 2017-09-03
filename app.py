@@ -26,7 +26,7 @@ def get_pagination_args():
 
 # A discord server
 class Server(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     if use_mysql:
         name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'), primary_key=True, unique=True, nullable=False)
     else:
@@ -40,7 +40,7 @@ class Server(db.Model):
 
 # A user in a chat room team
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     discord_id = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
 
     if use_mysql:
@@ -62,7 +62,7 @@ class User(db.Model):
 
 # A channel
 class Channel(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     discord_id = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
     if use_mysql:
         name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
@@ -87,7 +87,7 @@ class Channel(db.Model):
 
 # A message posted in a channel
 class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     discord_id = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
     timestamp = db.Column(db.DateTime)
     if use_mysql:
