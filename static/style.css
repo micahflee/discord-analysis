@@ -102,6 +102,12 @@ body {
   margin: 10px 0;
 }
 
+.content .results ul li.active {
+  background-color: #ffd6f9;
+  padding: 20px;
+  font-size: 1.1em;
+}
+
 .content .results ul p {
   margin: 0;
   padding: 0;

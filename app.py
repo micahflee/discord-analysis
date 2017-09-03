@@ -120,7 +120,7 @@ class Message(db.Model):
         return self.timestamp.strftime('%b %d, %Y %I:%M:%S %p')
 
     def permalink(self):
-        return '/view/{}/{}'.format(self.channel.id, int(self.timestamp.timestamp()))
+        return '/view/{}'.format(self.id)
 
     def highlight(self, query):
         # Make sure to escape the message here, and replace newslines with line breaks
@@ -166,7 +166,7 @@ def search():
     if s == '':
         s = 0
     page, per_page = get_pagination_args()
-    
+
     server = Server.query.filter_by(id=s).first()
 
     messages = Message.query
@@ -181,33 +181,27 @@ def search():
 
     servers = Server.query.all()
     pagination_link = '/search?q={}&s={}'.format(q, s)
-    return render_template('view.html', q=q, s=int(s), servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+    return render_template('results.html', q=q, s=int(s), servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
 
-@app.route('/view/<int:channel_id>/<int:ts>')
-def view(channel_id, ts):
+@app.route('/view/<int:message_id>')
+def view(message_id):
     q = request.args.get('q')
-    page, per_page = get_pagination_args()
 
-    # Look up the Channel
-    channel = Channel.query.filter_by(id=channel_id).first()
-    if not channel:
-        flash('Invalid channel')
+    # Look up the Message
+    message = Message.query.filter_by(id=message_id).first()
+    if not message:
+        flash('Invalid message')
         return redirect('/')
 
-    # Find all of the messages in this channel within an hour of the timestamp
-    ts = datetime.datetime.fromtimestamp(ts)
-    one_hour = datetime.timedelta(hours=1)
-
-    pagination = Message.query.filter_by(channel=channel).filter(Message.timestamp > ts - one_hour).filter(Message.timestamp < ts + one_hour).order_by(Message.timestamp).paginate(page, per_page, False)
+    # Find messages before and after this one
+    prev_messages = Message.query.filter(Message.id < message.id).order_by(Message.id).limit(20).all()
+    next_messages = Message.query.filter(Message.id > message.id).order_by(Message.id).limit(20).all()
 
     # Create a description
-    def format_ts(ts):
-        return ts.strftime('%b %d, %Y %I:%M:%S %p')
-    description = 'Messages in {}, #{} from {} to {}'.format(channel.server.name, channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
+    description = 'Message by {}, in {}, #{}'.format(message.user.name, message.server.name, message.channel.name)
 
     servers = Server.query.all()
-    pagination_link = '/view/{}/{}?q={}'.format(channel_id, ts, q)
-    return render_template('view.html', q=q, s=channel.server.id, channel=channel, servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+    return render_template('view.html', q=q, s=message.server.id, channel=message.channel, servers=servers, description=description, active_message_id=message.id, message=message, prev_messages=prev_messages, next_messages=next_messages)
 
 @app.route('/channel/<int:channel_id>')
 def channel(channel_id):
@@ -227,7 +221,7 @@ def channel(channel_id):
 
     servers = Server.query.all()
     pagination_link = '/channel/{}?'.format(channel_id)
-    return render_template('view.html', s=channel.server.id, channel=channel, servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+    return render_template('results.html', s=channel.server.id, channel=channel, servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
 
 @app.route('/users')
 def user_list():
@@ -253,7 +247,7 @@ def user(user_id):
 
     servers = Server.query.all()
     pagination_link = '/user/{}?'.format(user_id)
-    return render_template('view.html', servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+    return render_template('results.html', servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
 
 
 def main():
@@ -261,4 +255,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
