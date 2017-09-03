@@ -108,6 +108,18 @@ def import_json(filename):
     print("Import complete")
     print("")
 
+def user_stats():
+    users = User.query.order_by(User.name).all()
+    servers = Server.query.order_by(Server.name).all()
+
+    for user in users:
+        print("User: {}".format(user.name))
+        for server in servers:
+            message_count = Message.query.filter_by(server=server).filter_by(user=user).count()
+            if message_count > 0:
+                print("- {} messages on server {}".format(message_count, server.name))
+        print("")
+
 if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
@@ -115,6 +127,7 @@ if __name__ == '__main__':
     subparsers.add_parser('create-db')
     parser_import_json = subparsers.add_parser('import-json')
     parser_import_json.add_argument('filename')
+    subparsers.add_parser('user-stats')
     args = parser.parse_args()
 
     cmd = args.subcommand
@@ -126,6 +139,9 @@ if __name__ == '__main__':
         filenames = glob.glob(args.filename.replace('~', os.environ['HOME']))
         for filename in filenames:
             import_json(filename)
+
+    if cmd == 'user-stats':
+        user_stats()
 
     else:
         parser.print_help()
