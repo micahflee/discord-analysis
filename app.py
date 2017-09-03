@@ -156,19 +156,8 @@ data = None
 
 @app.route('/')
 def index():
-    server_stats = []
-
     servers = Server.query.all()
-    for server in servers:
-        message_count = Message.query.filter_by(server=server).count()
-        channels = Channel.query.filter_by(server=server).all()
-        server_stats.append({
-            'name': server.name,
-            'message_count': message_count,
-            'channels': ', '.join(['#'+_.name for _ in channels])
-        })
-
-    return render_template('index.html', servers=servers, server_stats=server_stats)
+    return render_template('index.html', servers=servers)
 
 @app.route('/search')
 def search():
