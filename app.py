@@ -215,7 +215,7 @@ def view(channel_id, ts):
     description = 'Messages in {}, #{} from {} to {}'.format(channel.server.name, channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
 
     servers = Server.query.all()
-    return render_template('view.html', q=q, s=channel.server.id, servers=servers, messages=messages, description=description)
+    return render_template('view.html', q=q, s=channel.server.id, active_channel_id=channel.id, servers=servers, messages=messages, description=description)
 
 def main():
     app.run()

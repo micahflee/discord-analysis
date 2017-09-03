@@ -10,6 +10,7 @@ body {
 .sidebar {
   display: table-cell;
   min-width: 300px;
+  padding-right: 20px;
 }
 
 .sidebar h3 {
@@ -21,10 +22,23 @@ body {
   margin: 0;
 }
 
+.sidebar .server a {
+  color: #660c5d;
+  text-decoration: none;
+}
+
 .sidebar .server ul {
   list-style: none;
   padding: 0;
   margin: 0 0 20px 0;
+}
+
+.sidebar .server ul li {
+  padding: 3px;
+}
+
+.sidebar .server ul li.active {
+  background-color: #f7c8f1;
 }
 
 .sidebar .server .message-count {
