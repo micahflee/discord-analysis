@@ -7,10 +7,22 @@
 
   <body>
     <div class="wrapper">
-      <div class="header">
-        <h1>
-          Discord Analysis
-        </h1>
+      <div class="sidebar"> 
+        {% for server in servers %}
+        <div class="server">
+          <p><strong>{{ server.name }}</strong></p>
+          <ul>
+            {% for channel in server.channels %}
+            <li><a href="{{ channel.permalink() }}">#{{ channel.name }}</a> <span class="message-count">[{{ channel.message_count() }}]</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+
+        <p><a href="/users">Users</a></p>
+      </div>
+
+	  <div class="content">
         <div class="search">
           <form method="get" action="/search">
             <input type="text" name="q" class="q" placeholder="Search query" value="{{q}}" />
@@ -25,13 +37,14 @@
             <input type="submit" value="Search" />
           </form>
         </div>
-      </div>
-      <div class="content">
-        {% for message in get_flashed_messages() %}
-          <div class=flash>{{ message }}</div>
-        {% endfor %}
+        
+        <div class="messages">
+          {% for message in get_flashed_messages() %}
+            <div class=flash>{{ message }}</div>
+          {% endfor %}
 
-        {% block content %}{% endblock %}
+          {% block content %}{% endblock %}
+        </div>
       </div>
     </div>
   </body>

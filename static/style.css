@@ -6,26 +6,38 @@ body {
   margin: 10px;
 }
 
-.header {
-  margin: 0 0 1em 0;
-  background-color: #666666;
-  padding: 10px;
-  color: #ffffff;
+.sidebar {
+  display: inline-block;
+  width: 300px;
+  float: left;
 }
 
-.header h1 {
-  display: inline-block;
+.sidebar h3 {
+  font-size: 18px;
   font-weight: bold;
-  font-size: 20px;
-  margin-right: 20px;
 }
 
-.header .search {
-  display: inline-block;
+.sidebar .server p {
+  margin: 0;
 }
 
-.header .search .q {
-  width: 600px;
+.sidebar .server ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.sidebar .server .message-count {
+  font-size: 10px;
+  color: #666666;
+}
+
+.content .search {
+    margin-bottom: 20px;
+}
+
+.content .search .q {
+  width: 400px;
 }
 
 .content .stats table {

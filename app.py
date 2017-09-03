@@ -3,6 +3,7 @@ import json
 import os
 import datetime
 import re
+import locale
 
 from flask import Flask, render_template, url_for, request, escape, flash, redirect
 from flask_sqlalchemy import SQLAlchemy
@@ -16,6 +17,16 @@ if use_mysql:
     from sqlalchemy.dialects.mysql import VARCHAR, TEXT
 
 db = SQLAlchemy(app)
+
+# Return a string version of the int, separated by commas
+def format_int(x):
+    if x < 0:
+        return '-' + format_int(-x)
+    result = ''
+    while x >= 1000:
+        x, r = divmod(x, 1000)
+        result = ",%03d%s" % (r, result)
+    return "%d%s" % (x, result)
 
 # A discord server
 class Server(db.Model):
@@ -47,6 +58,9 @@ class User(db.Model):
         self.discord_id = discord_id
         self.name = name
 
+    def permalink(self):
+        return '/user/{}'.format(self.id)
+
 # A channel
 class Channel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,6 +79,13 @@ class Channel(db.Model):
         self.server = server
         self.discord_id = discord_id
         self.name = name
+
+    def permalink(self):
+        return '/channel/{}'.format(self.id)
+
+    def message_count(self):
+        message_count = Message.query.filter_by(channel=self).count()
+        return format_int(message_count)
 
 # A message posted in a channel
 class Message(db.Model):
