@@ -246,6 +246,27 @@ def user_list():
     servers = Server.query.all()
     return render_template('user_list.html', servers=servers, users=users)
 
+@app.route('/user/<int:user_id>')
+def user(user_id):
+    page, per_page = get_pagination_args()
+
+    # Look up the User
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        flash('Invalid user')
+        return redirect('/')
+
+    # Look up messages
+    pagination = Message.query.filter_by(user=user).paginate(page, per_page, False)
+
+    # Description
+    description = 'Messages from @{}'.format(user.name)
+
+    servers = Server.query.all()
+    pagination_link = '/user/{}?'.format(user_id)
+    return render_template('view.html', servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+
+
 def main():
     app.run()
 
