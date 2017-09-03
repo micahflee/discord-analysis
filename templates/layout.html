@@ -12,8 +12,8 @@
         <div class="server">
           <p><strong>{{ server.name }}</strong></p>
           <ul>
-            {% for channel in server.channels %}
-            <li{% if channel.id == active_channel_id %} class="active"{% endif %}><a href="{{ channel.permalink() }}">#{{ channel.name }}</a> <span class="message-count">[{{ channel.message_count() }}]</span></li>
+            {% for c in server.channels %}
+            <li{% if channel %}{% if c.id == channel.id %} class="active"{% endif %}{% endif %}><a href="{{ c.permalink() }}">#{{ c.name }}</a> <span class="message-count">[{{ c.message_count() }}]</span></li>
             {% endfor %}
           </ul>
         </div>
@@ -25,7 +25,7 @@
 	  <div class="content">
         <div class="search">
           <form method="get" action="/search">
-            <input type="text" name="q" class="q" placeholder="Search query" value="{{q}}" />
+            <input type="text" name="q" class="q" placeholder="Search query"{% if q %} value="{{q}}"{% endif %} />
             <select name="s">
               <option value="">[all servers]</option>
               {% for server in servers %}

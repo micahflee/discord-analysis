@@ -3,12 +3,16 @@
 
 <h2>{{ description }}</h2>
 
+{% include 'pagination.html' %}
+
 <div class="results">
   <ul>
-    {% for message in messages %}
+    {% for message in pagination.items %}
       {% include 'message.html' %}
     {% endfor %}
   </ul>
 </div>
+
+{% include 'pagination.html' %}
 
 {% endblock %}

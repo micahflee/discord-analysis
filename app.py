@@ -28,6 +28,12 @@ def format_int(x):
         result = ",%03d%s" % (r, result)
     return "%d%s" % (x, result)
 
+# Get the page and per_page args from query string, as ints
+def get_pagination_args():
+    page = request.args.get('page', 1)
+    per_page = request.args.get('per_page', 2000)
+    return (int(page), int(per_page))
+
 # A discord server
 class Server(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -175,15 +181,17 @@ def index():
 @app.route('/search')
 def search():
     q = request.args.get('q')
-    s = request.args.get('s')
-    if not s:
+    s = request.args.get('s', 0)
+    if s == '':
         s = 0
+    page, per_page = get_pagination_args()
+    
     server = Server.query.filter_by(id=s).first()
 
     messages = Message.query
     if server:
         messages = messages.filter_by(server=server)
-    messages = messages.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).all()
+    pagination = messages.filter(Message.message.like("%{}%".format(q))).order_by(Message.timestamp).paginate(page, per_page, False)
 
     if server:
         description = 'Search {}: {}'.format(server.name, q)
@@ -191,11 +199,13 @@ def search():
         description = 'Search: {}'.format(q)
 
     servers = Server.query.all()
-    return render_template('view.html', q=q, s=int(s), servers=servers, messages=messages, description=description)
+    pagination_link = '/search?q={}&s={}'.format(q, s)
+    return render_template('view.html', q=q, s=int(s), servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
 
-@app.route('/view/<channel_id>/<int:ts>')
+@app.route('/view/<int:channel_id>/<int:ts>')
 def view(channel_id, ts):
     q = request.args.get('q')
+    page, per_page = get_pagination_args()
 
     # Look up the Channel
     channel = Channel.query.filter_by(id=channel_id).first()
@@ -207,7 +217,7 @@ def view(channel_id, ts):
     ts = datetime.datetime.fromtimestamp(ts)
     one_hour = datetime.timedelta(hours=1)
 
-    messages = Message.query.filter_by(channel=channel).filter(Message.timestamp > ts - one_hour).filter(Message.timestamp < ts + one_hour).order_by(Message.timestamp).all()
+    pagination = Message.query.filter_by(channel=channel).filter(Message.timestamp > ts - one_hour).filter(Message.timestamp < ts + one_hour).order_by(Message.timestamp).paginate(page, per_page, False)
 
     # Create a description
     def format_ts(ts):
@@ -215,7 +225,29 @@ def view(channel_id, ts):
     description = 'Messages in {}, #{} from {} to {}'.format(channel.server.name, channel.name, format_ts(ts-one_hour), format_ts(ts+one_hour))
 
     servers = Server.query.all()
-    return render_template('view.html', q=q, s=channel.server.id, active_channel_id=channel.id, servers=servers, messages=messages, description=description)
+    pagination_link = '/view/{}/{}?q={}'.format(channel_id, ts, q)
+    return render_template('view.html', q=q, s=channel.server.id, channel=channel, servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+
+@app.route('/channel/<int:channel_id>')
+def channel(channel_id):
+    page, per_page = get_pagination_args()
+
+    # Look up the Channel
+    channel = Channel.query.filter_by(id=channel_id).first()
+    if not channel:
+        flash('Invalid channel')
+        return redirect('/')
+
+    # Look up messages
+    pagination = Message.query.filter_by(channel=channel).paginate(page, per_page, False)
+
+    # Description
+    description = 'Messages in {}, #{}'.format(channel.server.name, channel.name)
+
+    servers = Server.query.all()
+    pagination_link = '/channel/{}?'.format(channel_id)
+    return render_template('view.html', s=channel.server.id, channel=channel, servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
+
 
 def main():
     app.run()
