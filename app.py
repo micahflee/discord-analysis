@@ -18,16 +18,6 @@ if use_mysql:
 
 db = SQLAlchemy(app)
 
-# Return a string version of the int, separated by commas
-def format_int(x):
-    if x < 0:
-        return '-' + format_int(-x)
-    result = ''
-    while x >= 1000:
-        x, r = divmod(x, 1000)
-        result = ",%03d%s" % (r, result)
-    return "%d%s" % (x, result)
-
 # Get the page and per_page args from query string, as ints
 def get_pagination_args():
     page = request.args.get('page', 1)
@@ -67,6 +57,9 @@ class User(db.Model):
     def permalink(self):
         return '/user/{}'.format(self.id)
 
+    def message_count(self):
+        return Message.query.filter_by(user=self).count()
+
 # A channel
 class Channel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -90,8 +83,7 @@ class Channel(db.Model):
         return '/channel/{}'.format(self.id)
 
     def message_count(self):
-        message_count = Message.query.filter_by(channel=self).count()
-        return format_int(message_count)
+        return Message.query.filter_by(channel=self).count()
 
 # A message posted in a channel
 class Message(db.Model):
@@ -248,6 +240,11 @@ def channel(channel_id):
     pagination_link = '/channel/{}?'.format(channel_id)
     return render_template('view.html', s=channel.server.id, channel=channel, servers=servers, pagination=pagination, pagination_link=pagination_link, description=description)
 
+@app.route('/users')
+def user_list():
+    users = User.query.all()
+    servers = Server.query.all()
+    return render_template('user_list.html', servers=servers, users=users)
 
 def main():
     app.run()

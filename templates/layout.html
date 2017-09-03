@@ -13,7 +13,7 @@
           <p><strong>{{ server.name }}</strong></p>
           <ul>
             {% for c in server.channels %}
-            <li{% if channel %}{% if c.id == channel.id %} class="active"{% endif %}{% endif %}><a href="{{ c.permalink() }}">#{{ c.name }}</a> <span class="message-count">[{{ c.message_count() }}]</span></li>
+            <li{% if channel %}{% if c.id == channel.id %} class="active"{% endif %}{% endif %}><a href="{{ c.permalink() }}">#{{ c.name }}</a> <span class="message-count">[{{ "{0:,}".format(c.message_count() | int) }}]</span></li>
             {% endfor %}
           </ul>
         </div>

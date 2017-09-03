@@ -41,11 +41,6 @@ body {
   background-color: #f7c8f1;
 }
 
-.sidebar .server .message-count {
-  font-size: 10px;
-  color: #666666;
-}
-
 .content {
   display: table-cell;
   width: 100%;
@@ -138,4 +133,9 @@ body {
 
 .content .results .message .highlight {
   background-color: #ff8ef1;
+}
+
+.message-count {
+  font-size: 10px;
+  color: #666666;
 }
