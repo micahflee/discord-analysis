@@ -215,7 +215,7 @@ def channel(channel_id):
         return redirect('/')
 
     # Look up messages
-    pagination = Message.query.filter_by(channel=channel).paginate(page, per_page, False)
+    pagination = Message.query.filter_by(channel=channel).order_by(Message.timestamp).paginate(page, per_page, False)
 
     # Description
     description = 'Messages in {}, #{}'.format(channel.server.name, channel.name)
