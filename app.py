@@ -241,7 +241,7 @@ def user(user_id):
         return redirect('/')
 
     # Look up messages
-    pagination = Message.query.filter_by(user=user).paginate(page, per_page, False)
+    pagination = Message.query.filter_by(user=user).order_by(Message.timestamp).paginate(page, per_page, False)
 
     # Description
     description = 'Messages from @{}'.format(user.name)
