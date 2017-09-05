@@ -112,13 +112,25 @@ def user_stats():
     users = User.query.order_by(User.name).all()
     servers = Server.query.order_by(Server.name).all()
 
+    server_users = {}
+
     for user in users:
         print("User: {}".format(user.name))
         for server in servers:
             message_count = Message.query.filter_by(server=server).filter_by(user=user).count()
             if message_count > 0:
+                if server.name in server_users:
+                    server_users[server.name] += 1
+                else:
+                    server_users[server.name] = 1
+
                 print("- {} messages on server {}".format(message_count, server.name))
         print("")
+
+    print("Users per server:")
+    print("")
+    for server_name in server_users:
+        print("{}: {} users".format(server_name, server_users[server_name]))
 
 if __name__ == '__main__':
     # Parse arguments
