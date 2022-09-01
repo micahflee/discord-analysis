@@ -3,7 +3,6 @@ import os
 import sys
 import argparse
 import json
-import datetime
 import glob
 import sqlalchemy
 from app import app, db, Server, User, Channel, Message
@@ -152,7 +151,7 @@ if __name__ == '__main__':
         for filename in filenames:
             import_json(filename)
 
-    if cmd == 'user-stats':
+    elif cmd == 'user-stats':
         user_stats()
 
     else:

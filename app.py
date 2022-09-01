@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import json
-import os
 import datetime
-import re
-import locale
 
-from flask import Flask, render_template, url_for, request, escape, flash, redirect
+from flask import Flask, render_template, request, escape, flash, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -28,9 +25,9 @@ def get_pagination_args():
 class Server(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     if use_mysql:
-        name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'), primary_key=True, unique=True, nullable=False)
+        name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'), unique=True, nullable=False)
     else:
-        name = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
+        name = db.Column(db.String(128), unique=True, nullable=False)
 
     channels = db.relationship("Channel", back_populates="server")
     messages = db.relationship("Message", back_populates="server")
@@ -41,7 +38,7 @@ class Server(db.Model):
 # A user in a chat room team
 class User(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    discord_id = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
+    discord_id = db.Column(db.String(128), unique=True, nullable=False)
 
     if use_mysql:
         name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
@@ -63,7 +60,7 @@ class User(db.Model):
 # A channel
 class Channel(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    discord_id = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
+    discord_id = db.Column(db.String(128), unique=True, nullable=False)
     if use_mysql:
         name = db.Column(VARCHAR(128, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
     else:
@@ -88,7 +85,7 @@ class Channel(db.Model):
 # A message posted in a channel
 class Message(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    discord_id = db.Column(db.String(128), primary_key=True, unique=True, nullable=False)
+    discord_id = db.Column(db.String(128), unique=True, nullable=False)
     timestamp = db.Column(db.DateTime)
     if use_mysql:
         message = db.Column(VARCHAR(4096, charset='utf8mb4', collation='utf8mb4_unicode_ci'))
