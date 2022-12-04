@@ -16,7 +16,8 @@ def create_db():
     if os.path.isfile(db_path):
         print("Database already exists")
     else:
-        db.create_all()
+        with app.app_context():
+            db.create_all()
 
 def import_json(filename):
     print("Importing: {}".format(filename))
@@ -25,84 +26,85 @@ def import_json(filename):
     with open(filename) as f:
         data = json.load(f)
 
-    # Add the servers
-    out('Adding servers: ')
-    for item in data['meta']['servers']:
-        name = item['name']
+    with app.app_context():
+        # Add the servers
+        out('Adding servers: ')
+        for item in data['meta']['servers']:
+            name = item['name']
 
-        try:
-            server = Server(name)
-            db.session.add(server)
-            db.session.commit()
-            out('+')
-        except sqlalchemy.exc.IntegrityError:
-            db.session.rollback()
-            out('.')
-    out('\n')
-
-    # Add the users
-    out('Adding users: ')
-    for user_discord_id in data['meta']['users']:
-        name = data['meta']['users'][user_discord_id]['name']
-
-        try:
-            user = User(user_discord_id, name)
-            db.session.add(user)
-            db.session.commit()
-            out('+')
-        except sqlalchemy.exc.IntegrityError:
-            db.session.rollback()
-            out('.')
-    out('\n')
-
-    # Add the channels
-    out('Adding channels: ')
-    for channel_discord_id in data['meta']['channels']:
-        name = data['meta']['channels'][channel_discord_id]['name']
-        server_id = data['meta']['channels'][channel_discord_id]['server']
-        server = Server.query.filter_by(name=data['meta']['servers'][server_id]['name']).first()
-
-        try:
-            channel = Channel(server, channel_discord_id, name)
-            db.session.add(channel)
-            db.session.commit()
-            out('+')
-        except sqlalchemy.exc.IntegrityError:
-            db.session.rollback()
-            out('.')
-    out('\n')
-
-    # Loop through each channel in data
-    count = 0
-    for channel_discord_id in data['data']:
-        # Get the channel
-        channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
-
-        # Loop through each message in this channel
-        out('Adding messages from {}, #{}: '.format(channel.server.name, channel.name))
-        for discord_message_id in data['data'][channel_discord_id]:
             try:
-                timestamp = data['data'][channel_discord_id][discord_message_id]['t']
-                message = data['data'][channel_discord_id][discord_message_id]['m']
-
-                user_index = data['data'][channel_discord_id][discord_message_id]['u']
-                discord_user_id = data['meta']['userindex'][user_index]
-
-                user = User.query.filter_by(discord_id=discord_user_id).first()
-
-                if 'a' in data['data'][channel_discord_id][discord_message_id]:
-                    attachments_json = json.dumps(data['data'][channel_discord_id][discord_message_id]['a'])
-                else:
-                    attachments_json = None
-
-                message = Message(channel.server, discord_message_id, timestamp, message, user, channel, attachments_json)
-                db.session.add(message)
+                server = Server(name)
+                db.session.add(server)
                 db.session.commit()
                 out('+')
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
                 out('.')
         out('\n')
+
+        # Add the users
+        out('Adding users: ')
+        for user_discord_id in data['meta']['users']:
+            name = data['meta']['users'][user_discord_id]['name']
+
+            try:
+                user = User(user_discord_id, name)
+                db.session.add(user)
+                db.session.commit()
+                out('+')
+            except sqlalchemy.exc.IntegrityError:
+                db.session.rollback()
+                out('.')
+        out('\n')
+
+        # Add the channels
+        out('Adding channels: ')
+        for channel_discord_id in data['meta']['channels']:
+            name = data['meta']['channels'][channel_discord_id]['name']
+            server_id = data['meta']['channels'][channel_discord_id]['server']
+            server = Server.query.filter_by(name=data['meta']['servers'][server_id]['name']).first()
+
+            try:
+                channel = Channel(server, channel_discord_id, name)
+                db.session.add(channel)
+                db.session.commit()
+                out('+')
+            except sqlalchemy.exc.IntegrityError:
+                db.session.rollback()
+                out('.')
+        out('\n')
+
+        # Loop through each channel in data
+        count = 0
+        for channel_discord_id in data['data']:
+            # Get the channel
+            channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
+
+            # Loop through each message in this channel
+            out('Adding messages from {}, #{}: '.format(channel.server.name, channel.name))
+            for discord_message_id in data['data'][channel_discord_id]:
+                try:
+                    timestamp = data['data'][channel_discord_id][discord_message_id]['t']
+                    message = data['data'][channel_discord_id][discord_message_id]['m']
+
+                    user_index = data['data'][channel_discord_id][discord_message_id]['u']
+                    discord_user_id = data['meta']['userindex'][user_index]
+
+                    user = User.query.filter_by(discord_id=discord_user_id).first()
+
+                    if 'a' in data['data'][channel_discord_id][discord_message_id]:
+                        attachments_json = json.dumps(data['data'][channel_discord_id][discord_message_id]['a'])
+                    else:
+                        attachments_json = None
+
+                    message = Message(channel.server, discord_message_id, timestamp, message, user, channel, attachments_json)
+                    db.session.add(message)
+                    db.session.commit()
+                    out('+')
+                except sqlalchemy.exc.IntegrityError:
+                    db.session.rollback()
+                    out('.')
+            out('\n')
 
     print("Import complete")
     print("")
