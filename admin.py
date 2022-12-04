@@ -37,7 +37,7 @@ def import_json(filename):
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
                 print(".", end="")
-        print("\n", end="")
+        print("")
 
         # Add the users
         print("Adding users: ", end="")
@@ -52,7 +52,7 @@ def import_json(filename):
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
                 print(".", end="")
-        print("\n", end="")
+        print("")
 
         # Add the channels
         print("Adding channels: ", end="")
@@ -71,7 +71,7 @@ def import_json(filename):
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
                 print(".", end="")
-        print("\n", end="")
+        print("")
 
         # Loop through each channel in data
         count = 0
@@ -121,7 +121,7 @@ def import_json(filename):
                 except sqlalchemy.exc.IntegrityError:
                     db.session.rollback()
                     print(".", end="")
-            print("\n", end="")
+            print("")
 
     print("Import complete")
     print("")
