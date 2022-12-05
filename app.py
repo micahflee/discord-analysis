@@ -202,7 +202,7 @@ def search():
     pagination = (
         messages.filter(Message.message.like("%{}%".format(q)))
         .order_by(Message.timestamp)
-        .paginate(page, per_page, False)
+        .paginate(page=page, per_page=per_page)
     )
 
     if server:
@@ -284,7 +284,7 @@ def channel(channel_id):
     pagination = (
         Message.query.filter_by(channel=channel)
         .order_by(Message.timestamp)
-        .paginate(page, per_page, False)
+        .paginate(page=page, per_page=per_page)
     )
 
     # Description
@@ -324,7 +324,7 @@ def user(user_id):
     pagination = (
         Message.query.filter_by(user=user)
         .order_by(Message.timestamp)
-        .paginate(page, per_page, False)
+        .paginate(page=page, per_page=per_page)
     )
 
     # Description
