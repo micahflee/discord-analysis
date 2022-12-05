@@ -25,7 +25,7 @@ def import_json(filename):
 
     with app.app_context():
         # Add the servers
-        print("Adding servers: ", end="")
+        print("Adding servers: ", end="", flush=True)
         for item in data["meta"]["servers"]:
             name = item["name"]
 
@@ -33,14 +33,14 @@ def import_json(filename):
                 server = Server(name)
                 db.session.add(server)
                 db.session.commit()
-                print("+", end="")
+                print("+", end="", flush=True)
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
-                print(".", end="")
+                print(".", end="", flush=True)
         print("")
 
         # Add the users
-        print("Adding users: ", end="")
+        print("Adding users: ", end="", flush=True)
         for user_discord_id in data["meta"]["users"]:
             name = data["meta"]["users"][user_discord_id]["name"]
 
@@ -48,14 +48,14 @@ def import_json(filename):
                 user = User(user_discord_id, name)
                 db.session.add(user)
                 db.session.commit()
-                print("+", end="")
+                print("+", end="", flush=True)
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
-                print(".", end="")
+                print(".", end="", flush=True)
         print("")
 
         # Add the channels
-        print("Adding channels: ", end="")
+        print("Adding channels: ", end="", flush=True)
         for channel_discord_id in data["meta"]["channels"]:
             name = data["meta"]["channels"][channel_discord_id]["name"]
             server_id = data["meta"]["channels"][channel_discord_id]["server"]
@@ -67,10 +67,10 @@ def import_json(filename):
                 channel = Channel(server, channel_discord_id, name)
                 db.session.add(channel)
                 db.session.commit()
-                print("+", end="")
+                print("+", end="", flush=True)
             except sqlalchemy.exc.IntegrityError:
                 db.session.rollback()
-                print(".", end="")
+                print(".", end="", flush=True)
         print("")
 
         # Loop through each channel in data
@@ -116,10 +116,10 @@ def import_json(filename):
                     )
                     db.session.add(message)
                     db.session.commit()
-                    print("+", end="")
+                    print("+", end="", flush=True)
                 except sqlalchemy.exc.IntegrityError:
                     db.session.rollback()
-                    print(".", end="")
+                    print(".", end="", flush=True)
             print("")
 
     print("Import complete")
