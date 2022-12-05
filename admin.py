@@ -74,7 +74,6 @@ def import_json(filename):
         print("")
 
         # Loop through each channel in data
-        count = 0
         for channel_discord_id in data["data"]:
             # Get the channel
             channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
@@ -85,30 +84,30 @@ def import_json(filename):
                     channel.server.name, channel.name
                 ), end=""
             )
-            for discord_message_id in data["data"][channel_discord_id]:
+            for message_discord_id in data["data"][channel_discord_id]:
                 try:
-                    timestamp = data["data"][channel_discord_id][discord_message_id][
+                    timestamp = data["data"][channel_discord_id][message_discord_id][
                         "t"
                     ]
-                    message = data["data"][channel_discord_id][discord_message_id]["m"]
+                    message = data["data"][channel_discord_id][message_discord_id]["m"]
 
-                    user_index = data["data"][channel_discord_id][discord_message_id][
+                    user_index = data["data"][channel_discord_id][message_discord_id][
                         "u"
                     ]
-                    discord_user_id = data["meta"]["userindex"][user_index]
+                    user_discord_id = data["meta"]["userindex"][user_index]
 
-                    user = User.query.filter_by(discord_id=discord_user_id).first()
+                    user = User.query.filter_by(discord_id=user_discord_id).first()
 
-                    if "a" in data["data"][channel_discord_id][discord_message_id]:
+                    if "a" in data["data"][channel_discord_id][message_discord_id]:
                         attachments_json = json.dumps(
-                            data["data"][channel_discord_id][discord_message_id]["a"]
+                            data["data"][channel_discord_id][message_discord_id]["a"]
                         )
                     else:
                         attachments_json = None
 
                     message = Message(
                         channel.server,
-                        discord_message_id,
+                        message_discord_id,
                         timestamp,
                         message,
                         user,
