@@ -60,7 +60,7 @@ class User(db.Model):
         self.name = name
 
     def permalink(self):
-        return "/user/{}".format(self.id)
+        return f"/user/{self.id}"
 
     def message_count(self):
         return Message.query.filter_by(user=self).count()
@@ -88,7 +88,7 @@ class Channel(db.Model):
         self.name = name
 
     def permalink(self):
-        return "/channel/{}".format(self.id)
+        return f"/channel/{self.id}"
 
     def message_count(self):
         return Message.query.filter_by(channel=self).count()
@@ -142,7 +142,7 @@ class Message(db.Model):
         return self.timestamp.strftime("%b %d, %Y %I:%M:%S %p")
 
     def permalink(self):
-        return "/view/{}".format(self.id)
+        return f"/view/{self.id}"
 
     def highlight(self, query):
         # Make sure to escape the message here, and replace newslines with line breaks
@@ -159,9 +159,7 @@ class Message(db.Model):
             if new_index > 0:
                 # Found
                 new_m += m[index:new_index]
-                new_m += "<span class='highlight'>{}</span>".format(
-                    m[new_index : new_index + len(query)]
-                )
+                new_m += f"<span class='highlight'>{m[new_index : new_index + len(query)]}</span>"
                 index = new_index + len(query)
             else:
                 # Not found
@@ -200,18 +198,18 @@ def search():
     if server:
         messages = messages.filter_by(server=server)
     pagination = (
-        messages.filter(Message.message.like("%{}%".format(q)))
+        messages.filter(Message.message.like(f"%{q}%"))
         .order_by(Message.timestamp)
         .paginate(page=page, per_page=per_page)
     )
 
     if server:
-        description = "Search {}: {}".format(server.name, q)
+        description = f"Search {server.name}: {q}"
     else:
-        description = "Search: {}".format(q)
+        description = f"Search: {q}"
 
     servers = Server.query.all()
-    pagination_link = "/search?q={}&s={}".format(q, s)
+    pagination_link = f"/search?q={q}&s={s}"
     return render_template(
         "results.html",
         q=q,
@@ -251,9 +249,7 @@ def view(message_id):
     )
 
     # Create a description
-    description = "Message by {}, in {}, #{}".format(
-        message.user.name, message.server.name, message.channel.name
-    )
+    description = f"Message by {message.user.name}, in {message.server.name}, #{message.channel.name}"
 
     servers = Server.query.all()
     return render_template(
@@ -288,10 +284,10 @@ def channel(channel_id):
     )
 
     # Description
-    description = "Messages in {}, #{}".format(channel.server.name, channel.name)
+    description = f"Messages in {channel.server.name}, #{channel.name}"
 
     servers = Server.query.all()
-    pagination_link = "/channel/{}?".format(channel_id)
+    pagination_link = f"/channel/{channel_id}?"
     return render_template(
         "results.html",
         s=channel.server.id,
@@ -328,10 +324,10 @@ def user(user_id):
     )
 
     # Description
-    description = "Messages from @{}".format(user.name)
+    description = f"Messages from @{user.name}"
 
     servers = Server.query.all()
-    pagination_link = "/user/{}?".format(user_id)
+    pagination_link = f"/user/{user_id}?"
     return render_template(
         "results.html",
         servers=servers,

@@ -17,7 +17,7 @@ def create_db():
 
 
 def import_json(filename):
-    print("Importing: {}".format(filename))
+    print(f"Importing: {filename}")
 
     # Import JSON file
     with open(filename) as f:
@@ -79,11 +79,7 @@ def import_json(filename):
             channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
 
             # Loop through each message in this channel
-            print(
-                "Adding messages from {}, #{}: ".format(
-                    channel.server.name, channel.name
-                ), end=""
-            )
+            print(f"Adding messages from {channel.server.name}, #{channel.name}: ", end="", flush=True)
             for message_discord_id in data["data"][channel_discord_id]:
                 try:
                     timestamp = data["data"][channel_discord_id][message_discord_id][
@@ -133,7 +129,7 @@ def user_stats():
     server_users = {}
 
     for user in users:
-        print("User: {}".format(user.name))
+        print(f"User: {user.name}")
         for server in servers:
             message_count = (
                 Message.query.filter_by(server=server).filter_by(user=user).count()
@@ -144,13 +140,13 @@ def user_stats():
                 else:
                     server_users[server.name] = 1
 
-                print("- {} messages on server {}".format(message_count, server.name))
+                print(f"- {message_count} messages on server {server.name}")
         print("")
 
     print("Users per server:")
     print("")
     for server_name in server_users:
-        print("{}: {} users".format(server_name, server_users[server_name]))
+        print(f"{server_name}: {server_users[server_name]} users")
 
 
 if __name__ == "__main__":
