@@ -2,7 +2,7 @@
 
 A tool to search Discord JSON files for keywords, and showing you specific messages that include those keywords, as well as the channels they're in.
 
-Note: This tool was developed in 2017 for a specific journalism project. It's no longer under development.
+Note: This tool was developed in 2017 for a specific journalism project that's featured in Chapter 14 of [Hacks, Leaks, and Revelations](https://github.com/micahflee/hacks-leaks-and-revelations). It's no longer under development.
 
 ## Getting started
 
