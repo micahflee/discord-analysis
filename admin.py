@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 import os
-import argparse
 import json
-import glob
 import sqlalchemy
+import click
 from app import app, db, Server, User, Channel, Message
 
 
+@click.group()
+def main():
+    """Discord Analysis admin tools"""
+
+
+@main.command()
 def create_db():
     db_path = app.config["SQLALCHEMY_DATABASE_URI"][10:]  # strip "sqlite://"
     if os.path.isfile(db_path):
@@ -16,6 +21,8 @@ def create_db():
             db.create_all()
 
 
+@main.command()
+@click.argument("filename", type=click.Path(exists=True))
 def import_json(filename):
     print(f"Importing: {filename}")
 
@@ -79,7 +86,11 @@ def import_json(filename):
             channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
 
             # Loop through each message in this channel
-            print(f"Adding messages from {channel.server.name}, #{channel.name}: ", end="", flush=True)
+            print(
+                f"Adding messages from {channel.server.name}, #{channel.name}: ",
+                end="",
+                flush=True,
+            )
             for message_discord_id in data["data"][channel_discord_id]:
                 try:
                     timestamp = data["data"][channel_discord_id][message_discord_id][
@@ -122,6 +133,7 @@ def import_json(filename):
     print("")
 
 
+@main.command()
 def user_stats():
     users = User.query.order_by(User.name).all()
     servers = Server.query.order_by(Server.name).all()
@@ -150,27 +162,4 @@ def user_stats():
 
 
 if __name__ == "__main__":
-    # Parse arguments
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(dest="subcommand")
-    subparsers.add_parser("create-db")
-    parser_import_json = subparsers.add_parser("import-json")
-    parser_import_json.add_argument("filename")
-    subparsers.add_parser("user-stats")
-    args = parser.parse_args()
-
-    cmd = args.subcommand
-
-    if cmd == "create-db":
-        create_db()
-
-    elif cmd == "import-json":
-        filenames = glob.glob(args.filename.replace("~", os.environ["HOME"]))
-        for filename in filenames:
-            import_json(filename)
-
-    elif cmd == "user-stats":
-        user_stats()
-
-    else:
-        parser.print_help()
+    main()
