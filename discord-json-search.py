@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 import sys
 import json
-import datetime
 import click
+from datetime import datetime
 
 
 def highlight(message, query):
@@ -56,7 +56,7 @@ def search(data, query):
             user_index = data["data"][channel_id][message_id]["u"]
             user_id = data["meta"]["userindex"][user_index]
             user_name = data["meta"]["users"][user_id]["name"]
-            timestamp = datetime.datetime.fromtimestamp(
+            timestamp = datetime.fromtimestamp(
                 data["data"][channel_id][message_id]["t"] / 1000
             )
             message = data["data"][channel_id][message_id]["m"]
@@ -72,8 +72,8 @@ def search(data, query):
 def main(filename, query):
     # Load the JSON file
     try:
-        with open(filename) as data_file:
-            data = json.load(data_file)
+        with open(filename) as f:
+            data = json.loads(f.read())
     except:
         print("Failed to load JSON file")
         sys.exit()
