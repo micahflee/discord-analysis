@@ -83,7 +83,7 @@ def import_json(filename):
         # Loop through each channel in data
         for channel_discord_id in data["data"]:
             # Get the channel
-            channel = Channel.query.filter_by(discord_id=channel_discord_id).first()
+            channel = Channel.query.filter_by(discord_id=channel_discord_id).one()
 
             # Loop through each message in this channel
             print(
@@ -103,7 +103,7 @@ def import_json(filename):
                     ]
                     user_discord_id = data["meta"]["userindex"][user_index]
 
-                    user = User.query.filter_by(discord_id=user_discord_id).first()
+                    user = User.query.filter_by(discord_id=user_discord_id).one()
 
                     if "a" in data["data"][channel_discord_id][message_discord_id]:
                         attachments_json = json.dumps(
