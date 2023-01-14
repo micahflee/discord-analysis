@@ -1,9 +1,0 @@
-import os
-
-# SQLAlchemy
-SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/database.sqlite3' % (os.path.dirname(__file__))
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_ECHO = False
-
-# Disable debugging
-DEBUG = False

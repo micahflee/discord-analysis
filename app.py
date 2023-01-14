@@ -6,15 +6,10 @@ from flask import Flask, render_template, request, escape, flash, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config.from_pyfile("app.cfg")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.sqlite3"
+app.config["DEBUG"] = True
 
 db = SQLAlchemy(app)
-
-# Get the page and per_page args from query string, as ints
-def get_pagination_args():
-    page = request.args.get("page", 1)
-    per_page = request.args.get("per_page", 2000)
-    return (int(page), int(per_page))
 
 
 # A discord server
@@ -144,6 +139,13 @@ class Message(db.Model):
 
 
 data = None
+
+
+# Get the page and per_page args from query string, as ints
+def get_pagination_args():
+    page = request.args.get("page", 1)
+    per_page = request.args.get("per_page", 2000)
+    return (int(page), int(per_page))
 
 
 @app.route("/")

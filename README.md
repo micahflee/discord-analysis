@@ -14,8 +14,6 @@ $ . venv/bin/activate
 (env) $ pip3 install -r requirements.txt
 ```
 
-Copy `app.cfg-sample` to `app.cfg` and edit it to specify database settings.
-
 Initialize the database:
 
 ```sh
